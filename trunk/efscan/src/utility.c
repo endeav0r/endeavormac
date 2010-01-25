@@ -53,11 +53,55 @@ char * sqlite_escape_string (char * s)
 char int_to_hex (int i)
 {
 	if ((i >= 0) && (i <= 9))
-		return (char) '0' + i;
+		return '0' + ((char) i);
 	else if ((i >= 10) && (i < 16))
-		return (char) 'a' + (i - 10);
+		return 'a' + (char) (i - 10);
 	else
 		return (char) 0;
+}
+
+
+
+int base16_char_to_int (unsigned char c)
+{
+	
+	if ((c >= '0') && (c <= '9'))
+		return (int) (c - '0');
+	else if ((c >= 'a') && (c <= 'f'))
+		return ((int) (c - 'a')) + 10;
+	else if ((c >= 'A') && (c <= 'F'))
+		return ((int) (c - 'A')) + 10;
+	else
+		return -1;
+		
+}
+		
+
+
+// function is not completely safe
+int64_t int64_t_atoi (char * s)
+{
+	
+	int i;
+	int64_t multiplier = 1;
+	int64_t result = 0;
+	
+	for (i = strlen(s) - 1; i >= 0; i--)
+	{
+		
+		if ((s[i] >= '0') || (s[i] <= '9'))
+		{
+			result += ((int64_t) (s[i] - '0')) * multiplier;
+			multiplier *= (int64_t) 10;
+		}
+		
+	}
+
+	if (s[0] == '-')
+		result *= -1;
+	
+	return result;
+	
 }
 
 
@@ -74,8 +118,8 @@ char * base16_string (unsigned char * data, int data_len)
 	result_i = 0;
 	for (data_i = 0; data_i < data_len; data_i++)
 	{
-		result[result_i++] = int_to_hex(data[data_i] / 16);
-		result[result_i++] = int_to_hex(data[data_i] % 16);
+		result[result_i++] = int_to_hex(((int) data[data_i]) / 16);
+		result[result_i++] = int_to_hex(((int) data[data_i]) % 16);
 	}
 	result[result_i] = 0;
 	
