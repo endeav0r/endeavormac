@@ -1,5 +1,5 @@
-gcc -O3 -g -pg -c -Wall src/polarssl/sha1.c -o o/md5.o
-gcc -O3 -g -pg -c -Wall src/polarssl/md5.c -o o/sha1.o
+gcc -O3 -g -pg -c -Wall src/polarssl/sha1.c -o o/sha1.o
+gcc -O3 -g -pg -c -Wall src/polarssl/md5.c -o o/md5.o
 
 gcc -O2 -g -pg -c -Wall src/utility.c -o o/utility.o
 gcc -O2 -g -pg -c -Wall src/nsrl.c -o o/nsrl.o
