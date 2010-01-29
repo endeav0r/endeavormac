@@ -215,7 +215,6 @@ int sqlite_execute_query (const char * query, sqlite3 * db)
 	sqlite3_stmt * statement;
 	const char * statement_tail;
 	
-	// create scans table
 	result = sqlite3_prepare(db,
 	                         query,
 	                         strlen(query),

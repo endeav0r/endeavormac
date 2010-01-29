@@ -18,3 +18,5 @@ echo "test_nsrlfile"
 gcc -O2 -g -pg -Wall src/test_nsrlfile.c -o test_nsrlfile o/utility.o o/nsrl.o o/error.o
 echo "scan"
 gcc -O2 -g -pg -Wall src/scan.c -o scan o/fileinfo.o o/utility.o o/sha1.o o/md5.o `pkg-config --static --libs sqlite3`
+echo "nsrlfile"
+gcc -O2 -g -pg -Wall src/nsrlfile.c -o nsrlfile o/nsrl.o o/utility.o o/error.o `pkg-config --static --libs sqlite3`
