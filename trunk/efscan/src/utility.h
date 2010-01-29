@@ -24,6 +24,7 @@ char * base16_string (unsigned char * data, int data_len);
 int base16_char_to_int (unsigned char c);
 
 // result must be freed
+// will dynamically resize to hold string value
 char * sqlite_escape_string (char * s);
 
 #endif
