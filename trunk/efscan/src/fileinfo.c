@@ -60,9 +60,9 @@ int file_info (char * path, file_info_t * fi)
 		{
 			if ((path[i] == '/') || (path[i] == '\\'))
 			{
-				memset(fi->name, strlen(path) - i + 1, 0);
+				memset(&(fi->name), 0, 1024);
 				strncpy(fi->name, &path[i + 1], 1023);
-				memset(fi->path, i + 1, 0);
+				memset(fi->path, 0, 4096);
 				if (i > 4095)
 					strncpy(fi->path, path, 4095);
 				else
