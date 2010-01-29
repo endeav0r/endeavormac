@@ -146,6 +146,10 @@ char * int_itoa (int i)
 
 char * int64_t_itoa (int64_t n)
 {
-	sprintf(itoa_result, "%lld", n);
+	#ifdef ARCH_64
+		sprintf(itoa_result, "%ld", n);
+	#else
+		sprintf(itoa_result, "%lld", n);
+	#endif
 	return itoa_result;	
 }

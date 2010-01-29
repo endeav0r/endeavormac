@@ -3,7 +3,7 @@
 
 #include "utility.h"
 #include "nsrl.h"
-
+#include "config.h"
 
 
 int main (int argc, char * argv[])
@@ -37,7 +37,11 @@ int main (int argc, char * argv[])
 		tmp_sha1_string = base16_string(record->sha1_hash, 20);
 		tmp_md5_string = base16_string(record->md5_hash, 16);
 		
-		printf("%s\n%s\n%s\n%lld\n%d\n\n", tmp_sha1_string, tmp_md5_string, record->filename, record->filesize, record->product_code);
+		#ifdef ARCH_64
+			printf("%s\n%s\n%s\n%ld\n%d\n\n", tmp_sha1_string, tmp_md5_string, record->filename, record->filesize, record->product_code);
+		#else
+			printf("%s\n%s\n%s\n%lld\n%d\n\n", tmp_sha1_string, tmp_md5_string, record->filename, record->filesize, record->product_code);
+		#endif
 	
 		free(tmp_sha1_string);
 		free(tmp_md5_string);

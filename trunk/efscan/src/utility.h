@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "config.h"
+
 extern char itoa_result[64];
 
 char int_to_hex (int i);

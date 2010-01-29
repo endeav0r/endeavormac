@@ -19,7 +19,7 @@
 
 #define CRAWL_ERROR_UNKNOWN 1000
 
-#define SCAN_DEBUG 0
+#define SCAN_DEBUG 1
 #define FILE_INFO_TO_STDOUT 0
 
 
