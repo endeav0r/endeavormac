@@ -19,7 +19,7 @@
 
 #define CRAWL_ERROR_UNKNOWN 1000
 
-#define SCAN_DEBUG 1
+#define SCAN_DEBUG 0
 #define FILE_INFO_TO_STDOUT 0
 
 
@@ -42,14 +42,14 @@ char query_tmp [8192];
 
 
 
-int crawl_dir (char * path, int64_t scan_id, sqlite3 * db);
+int crawl_dir (char * path, int scan_id, sqlite3 * db);
 int sqlite_execute_query (const char * query, sqlite3 * db);
 sqlite3 * sqlite3_db_init (char * db_filename);
 
 
 
 
-int crawl_dir (char * path, int64_t scan_id, sqlite3 * db)
+int crawl_dir (char * path, int scan_id, sqlite3 * db)
 {
 	
 	int result;
@@ -282,7 +282,12 @@ int main (int argc, char * argv[])
 {
 	
 	int result;
+	int scan_id;
 	sqlite3 * db;
+	time_t t;
+	char scans_query_buf[128];
+	sqlite3_stmt * statement;
+	const char * statement_tail;
 
 	if (argc < 3)
 	{
@@ -293,9 +298,42 @@ int main (int argc, char * argv[])
 	// open and init sqlite3 db
 	db = sqlite3_db_init(argv[1]);
 	
+	t = time(NULL);
+	snprintf(scans_query_buf, 127, "INSERT INTO scans (time) VALUES ('%d');", (int) t);
+	sqlite_execute_query(scans_query_buf, db);
+	sqlite_execute_query("SELECT id FROM scans ORDER BY id DESC LIMIT 0, 1", db);
+	snprintf(scans_query_buf, 127, "SELECT id FROM scans ORDER BY id DESC LIMIT 0, 1");
+	
+	result = sqlite3_prepare(db,
+	                         scans_query_buf,
+	                         strlen(scans_query_buf),
+	                         &statement,
+	                         &statement_tail);
+	if (result != SQLITE_OK)
+	{
+		printf("Error querying for scan id\n");
+		sqlite3_close(db);
+		return 0;
+	}
+	result = sqlite3_step(statement);
+	if (result == SQLITE_ERROR)
+	{
+		printf("Error querying for scan id (step)\n");
+		sqlite3_close(db);
+		return 0;
+	}
+	scan_id = sqlite3_column_int(statement, 0);
+	result = sqlite3_finalize(statement);
+	if (result != SQLITE_OK)
+	{
+		printf("Error querying for scan id (finalize)\n");
+		sqlite3_close(db);
+		return 0;
+	}
+		
 	if (db != NULL)
 	{
-		result = crawl_dir (argv[2], (int64_t) 0, db);
+		result = crawl_dir (argv[2], scan_id, db);
 		
 		if (result != 0)
 			printf("crawl_dir result: %d\n", result);
