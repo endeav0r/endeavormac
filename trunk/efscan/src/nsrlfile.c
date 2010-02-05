@@ -187,6 +187,8 @@ int main (int argc, char * argv[])
 	// open and init sqlite3 db
 	db = sqlite3_db_init(argv[1]);
 	
+	sqlite_execute_query("PRAGMA count_changes=FALSE;", db);
+	
 	if (db != NULL)
 	{
 		result = nsrlfile_main (argv[2], db);
