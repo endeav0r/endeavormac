@@ -146,20 +146,16 @@ c = conn.cursor()
 c.execute("SELECT time FROM pinglog ORDER BY time DESC LIMIT 0, 1")
 last_db_time = c.fetchone()[0]
 
-today_start_seconds = int(time_module.time()) - int(time_module.time()) % (60 * 60 * 24)
-print 'today_start_seconds ' + str(today_start_seconds)
+today_start_seconds = int(time_module.time()) - int(time_module.time()) % (60 * 60 * 24) - (TIMEZONE * 60 * 60)
 
 for day_to_graph in range(DAYS_TO_GRAPH) :
 	start_time = today_start_seconds - (60 * 60 * 24) * day_to_graph
 	end_time = today_start_seconds + (60 * 60 * 24) * (day_to_graph + 1)
-	print 'start_time ' + str(start_time)
-	print 'end_time ' + str(end_time)
 	c.execute("SELECT time, delay FROM pinglog WHERE time >= ? AND time <= ?", (start_time, end_time))
 	data = []
 	for row in c :
-		data.append((int(row[0]), int(row[1])))
+		data.append((int(row[0]) + (TIMEZONE * 60 * 60), int(row[1])))
 	filename = time_module.strftime('%d%b%y', time_module.gmtime(today_start_seconds))
 	filename.lower()
 	filename += '.png'
-	print data
 	chart_day(data, OUTDIR + filename)
