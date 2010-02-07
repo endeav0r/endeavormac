@@ -1,0 +1,9 @@
+#summary A tool for analysis of php scripts from the python command line
+
+= Introduction =
+
+This project is very much so a work in progress.
+
+= Details =
+
+As of this writing, test_php_file.py shows pretty much all the functionality
