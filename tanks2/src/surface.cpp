@@ -88,7 +88,7 @@ int Surface :: get_height ()
 
 
 
-int Surface :: blitter (Surface * s, int x, int y, bool masked)
+int Surface :: blitter(Surface * s, int x, int y, bool masked, int rotate)
 {
 	
 	#if SURFACE_DEBUG == 1
@@ -106,10 +106,17 @@ int Surface :: blitter (Surface * s, int x, int y, bool masked)
 	this->acquire();
 	s->acquire();
 	
-	if (masked == true)
-		masked_blit(s->bitmap, this->bitmap, 0, 0, x, y, s->width, s->height);
+	if (rotate != 0)
+	{
+		rotate_sprite(this->bitmap, s->bitmap, x, y, itofix(rotate));
+	}
 	else
-		blit(s->bitmap, this->bitmap, 0, 0, x, y, s->width, s->height);
+	{
+		if (masked == true)
+			masked_blit(s->bitmap, this->bitmap, 0, 0, x, y, s->width, s->height);
+		else
+			blit(s->bitmap, this->bitmap, 0, 0, x, y, s->width, s->height);
+	}
 	
 	s->release();
 	this->release();

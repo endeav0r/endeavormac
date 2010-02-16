@@ -12,6 +12,13 @@ Tank :: Tank (Game * game, char * lua_source)
 	
 	this->game = game;
 	
+	this->action.type = TANK_ACTION_NONE;
+	this->action.x = 0;
+	this->action.y = 0;
+	
+	this->orientation = TANK_ORIENTATION_UP;
+	
+	// this code sets up and loads our lua file
 	this->l_vm = luaL_newstate();
 	luaL_openlibs(this->l_vm);
 	
@@ -31,7 +38,8 @@ Tank :: Tank (Game * game, char * lua_source)
 	}
 	else
 		throw Exception(LUA_UNKNOWN_ERROR, "Unknown lua error");
-		
+	
+	// register lua functions for user
 	this->register_lua_functions();
 		
 }
@@ -72,7 +80,27 @@ void Tank :: turn ()
 	lua_getfield(this->l_vm, LUA_GLOBALSINDEX, "turn");
 	this->l_pcall(this->l_vm, 0, 0);
 }
-	
+
+
+
+void Tank :: process_action (int action_type)
+{
+	if (action_type == TANK_ACTION_MOVE)
+	{
+		this->action.type = TANK_ACTION_NONE;
+		
+		if (this->action.x < this->x)
+			this->orientation = TANK_ORIENTATION_LEFT;
+		else if (this->action.x > this->x)
+			this->orientation = TANK_ORIENTATION_RIGHT;
+		else if (this->action.y < this->y)
+			this->orientation = TANK_ORIENTATION_UP;
+		else if (this->action.y > this->y)
+			this->orientation = TANK_ORIENTATION_DOWN;
+		this->x = this->action.x;
+		this->y = this->action.y;
+	}
+}
 
 
 
@@ -100,6 +128,13 @@ int Tank :: get_x ()
 int Tank :: get_y ()
 {
 	return this->y;
+}
+
+
+
+int Tank :: get_orientation ()
+{
+	return this->orientation;
 }
 
 
@@ -166,8 +201,9 @@ int Tank :: l_move (lua_State * l)
 		
 	if (this_tank->game->location_free(this_tank->x + x, this_tank->y + y))
 	{
-		this_tank->x += x;
-		this_tank->y += y;
+		this_tank->action.type = TANK_ACTION_MOVE;
+		this_tank->action.x = this_tank->x + x;
+		this_tank->action.y = this_tank->y + y;
 		lua_pushboolean(l, 1);
 	}
 	else

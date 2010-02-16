@@ -30,7 +30,9 @@ class Surface
 		int get_width();
 		int get_height();
 		
-		int blitter(Surface * s, int x, int y, bool masked=false);
+		// rotate 256 = full circle, 64 = right
+		int blitter(Surface * s, int x, int y, bool masked = false, int rotate = 0);
+		int rotate_blit (Surface *s, int x, int y);
 		
 };
 

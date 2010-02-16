@@ -87,6 +87,7 @@ void Game :: draw_screen_buffer ()
 	int y;
 	int random_tile;
 	
+	
 	std::list <Tank *> :: iterator tank_i;
 	int tank_tile_i = 0;
 	
@@ -108,12 +109,20 @@ void Game :: draw_screen_buffer ()
 		}
 	}
 	
+	// move tanks
+	for (tank_i = this->tanks.begin(); tank_i != this->tanks.end(); tank_i++)
+	{
+		(*tank_i)->process_action(TANK_ACTION_MOVE);
+	}
+	
+	// draw tanks
 	for (tank_i = this->tanks.begin(); tank_i != this->tanks.end(); tank_i++)
 	{
 		this->screen_buffer->blitter(this->tank_tiles[tank_tile_i],
 		                             (*tank_i)->get_x() * TILE_WIDTH,
 		                             (*tank_i)->get_y() * TILE_HEIGHT,
-		                             true);
+		                             true,
+		                             (*tank_i)->get_orientation());
 		if (++tank_tile_i > TANK_TILES_N)
 			tank_tile_i = 0;
 	}
