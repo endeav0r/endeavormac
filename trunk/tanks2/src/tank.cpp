@@ -1,10 +1,16 @@
 #include "tank.hpp"
+#include "game.hpp"
 
 
-
-Tank :: Tank (char * lua_source)
+Tank :: Tank (Game * game, char * lua_source)
 {
+	this->x = 0;
+	this->y = 0;
+	
 	int error;
+	char * lua_syntax_error_description;
+	
+	this->game = game;
 	
 	this->l_vm = luaL_newstate();
 	luaL_openlibs(this->l_vm);
@@ -18,9 +24,38 @@ Tank :: Tank (char * lua_source)
 			throw Exception(LUA_P_CALL_ERROR, "lua_p_call returned an error");
 	}
 	else if (error == LUA_ERRSYNTAX)
-		throw Exception(LUA_SYNTAX_ERROR, "Error in lua syntax");
+	{
+		lua_syntax_error_description = (char *) lua_tostring(this->l_vm, 0);
+		throw Exception(LUA_SYNTAX_ERROR, lua_syntax_error_description);
+		lua_settop(this->l_vm, -1);
+	}
 	else
 		throw Exception(LUA_UNKNOWN_ERROR, "Unknown lua error");
+		
+	this->register_lua_functions();
+		
+}
+
+
+
+void Tank :: register_lua_functions ()
+{
+	this->register_lua_function("move", this->l_move);
+	this->register_lua_function("location_free", this->l_location_free);
+	this->register_lua_function("getx", this->l_getx);
+	this->register_lua_function("gety", this->l_gety);
+	this->register_lua_function("get_game_width", this->l_getx);
+	this->register_lua_function("get_game_height", this->l_gety);
+	this->register_lua_function("get_enemy_locations", this->l_get_enemy_locations);
+}
+
+
+
+void Tank :: register_lua_function (char * lua_name, int (*f) (lua_State *))
+{
+	lua_pushlightuserdata(this->l_vm, this);
+	lua_pushcclosure(this->l_vm, f, 1);
+	lua_setglobal(this->l_vm, lua_name);
 }
 
 
@@ -29,6 +64,15 @@ Tank :: ~Tank ()
 {
 	lua_close(this->l_vm);	
 }
+
+
+
+void Tank :: turn ()
+{	
+	lua_getfield(this->l_vm, LUA_GLOBALSINDEX, "turn");
+	this->l_pcall(this->l_vm, 0, 0);
+}
+	
 
 
 
@@ -57,3 +101,221 @@ int Tank :: get_y ()
 {
 	return this->y;
 }
+
+
+
+Tank * Tank :: get_this ()
+{
+	return this;
+}
+
+
+
+/********************************
+* LUA FUNCTIONS
+********************************/
+
+void Tank :: l_pcall (lua_State * l, int args_n, int returns_n)
+{
+	
+	int error;
+	char * lua_error_description;
+	
+	error = lua_pcall(l_vm, args_n, returns_n, 0);
+	
+	if (error != 0)
+	{
+		lua_error_description = (char *) lua_tostring(this->l_vm, -1);
+		throw Exception(LUA_SYNTAX_ERROR, lua_error_description);
+		lua_settop(this->l_vm, -1);
+	}
+	
+}
+
+
+
+int Tank :: l_move (lua_State * l)
+{
+	
+	int arguments_n;
+	int x;
+	int y;
+	
+	Tank * this_tank;
+	
+	arguments_n = lua_gettop(l);
+	
+	if (arguments_n != 2)
+	{
+		lua_pushstring(l, "Incorrect number of arguments for move");
+		lua_error(l);
+	}
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	
+	x = lua_tonumber(l, 1);
+	y = lua_tonumber(l, 2);
+	
+	x %= 2;
+	y %= 2;
+	if ((x != 0) && (y != 0))
+	{
+		lua_pushstring(l, "Only x or y can be not equal to zero, not both");
+		lua_error(l);
+	}
+		
+	if (this_tank->game->location_free(this_tank->x + x, this_tank->y + y))
+	{
+		this_tank->x += x;
+		this_tank->y += y;
+		lua_pushboolean(l, 1);
+	}
+	else
+		lua_pushboolean(l, 0);
+	
+	return 1;
+
+}
+
+
+
+int Tank :: l_location_free (lua_State * l)
+{
+	
+	int arguments_n;
+	int x;
+	int y;
+	
+	Tank * this_tank;
+	
+	arguments_n = lua_gettop(l);
+	
+	if (arguments_n != 2)
+	{
+		lua_pushstring(l, "Incorrect number of arguments for move");
+		lua_error(l);
+	}
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	
+	x = lua_tonumber(l, 1);
+	y = lua_tonumber(l, 2);
+	
+	if (this_tank->game->location_free(x, y) == true)
+		lua_pushboolean(l, 1);
+	else
+		lua_pushboolean(l, 0);
+	
+	return 1;
+
+}
+
+
+
+int Tank :: l_getx (lua_State * l)
+{
+	
+	Tank * this_tank;
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	
+	lua_pushinteger(l, this_tank->get_x());
+	
+	return 1;
+
+}
+
+
+
+int Tank :: l_gety (lua_State * l)
+{
+	
+	Tank * this_tank;
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	
+	lua_pushinteger(l, this_tank->get_y());
+	
+	return 1;
+
+}
+
+
+
+int Tank :: l_get_game_width (lua_State * l)
+{
+	
+	Tank * this_tank;
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	
+	lua_pushinteger(l, GAME_WIDTH);
+	
+	return 1;
+
+}
+
+
+
+int Tank :: l_get_game_height (lua_State * l)
+{
+	
+	Tank * this_tank;
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	
+	lua_pushinteger(l, GAME_HEIGHT);
+	
+	return 1;
+
+}
+
+
+
+int Tank :: l_get_enemy_locations (lua_State * l)
+{
+	int table_index = 0;
+	Tank * this_tank;
+	std::list <Tank *> tanks;
+	std::list <Tank *> :: iterator tank_i;
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	
+	tanks = this_tank->game->get_tanks();
+	
+	// create new table (referred to as enemy_locations in these comments)
+	lua_newtable(l);
+	
+	for (tank_i = tanks.begin(); tank_i != tanks.end(); tank_i++)
+	{
+		if (*tank_i != this_tank)
+		{
+			// top, bottom (these comments keep track of what's on the stack)
+			// enemy_locations
+			lua_pushinteger(l, table_index++); // table_index, enemy_locations
+			lua_newtable(l); // new_table_row, table_index, enemy_locations
+			lua_pushinteger(l, 0); // 0, new_table_row, table_index, enemy_locations
+			lua_pushinteger(l, (*tank_i)->get_x()); // x, 0, new_table_row, table_index, enemy_locations
+			lua_settable(l, -3); // new_table_row, table_index, enemy_locations
+			lua_pushinteger(l, 1);
+			lua_pushinteger(l, (*tank_i)->get_y());
+			lua_settable(l, -3); // new_table_row, table_index, enemy_locations
+			lua_settable(l, -3); // enemy_locations
+		}
+	}
+	
+	//lua_pushinteger(l, GAME_HEIGHT);
+	
+	return 1;
+
+}
+
+
+
+
+
+
+
+
+
+

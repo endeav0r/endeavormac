@@ -27,7 +27,8 @@ Surface :: Surface (char * filename)
 
 
 
-Surface :: Surface (int width, int hei
+Surface :: Surface (int width, int height)
+{
 
 	this->bitmap = create_bitmap(width, height);
 	clear_bitmap(this->bitmap);
@@ -87,7 +88,7 @@ int Surface :: get_height ()
 
 
 
-int Surface :: blitter (Surface * s, int x, int y)
+int Surface :: blitter (Surface * s, int x, int y, bool masked)
 {
 	
 	#if SURFACE_DEBUG == 1
@@ -104,7 +105,12 @@ int Surface :: blitter (Surface * s, int x, int y)
 	
 	this->acquire();
 	s->acquire();
-	blit(s->bitmap, this->bitmap, 0, 0, x, y, s->width, s->height);
+	
+	if (masked == true)
+		masked_blit(s->bitmap, this->bitmap, 0, 0, x, y, s->width, s->height);
+	else
+		blit(s->bitmap, this->bitmap, 0, 0, x, y, s->width, s->height);
+	
 	s->release();
 	this->release();
 	

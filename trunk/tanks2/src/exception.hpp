@@ -2,6 +2,7 @@
 #define exception_H
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <string>
@@ -21,10 +22,11 @@ class Exception
 
 	private :
 		int code;
-		std::string description;
+		char * description;
+		
 	
 	public :
-		Exception (int code, std::string description);
+		Exception (int code, char * description);
 		~Exception();
 		void display ();
 

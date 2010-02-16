@@ -5,11 +5,11 @@ g++ -g -O2 -Wall -c src/map.cpp -o o/map.o -Wno-write-strings
 echo "exception"
 g++ -g -O2 -Wall -c src/exception.cpp -o o/exception.o
 echo "surface"
-g++ -g -O2 -Wall -c src/surface.cpp -o o/surface.o
+g++ -g -O2 -Wall -c src/surface.cpp -o o/surface.o -Wno-write-strings
 echo "game"
 g++ -g -O2 -Wall -c src/game.cpp -o o/game.o -Wno-write-strings
 echo "tank"
-g++ -g -O2 -Wall -c src/tank.cpp -o o/tank.o
+g++ -g -O2 -Wall -c src/tank.cpp -o o/tank.o -Wno-write-strings
 echo "main"
 g++ -g -O2 -Wall -c src/main.cpp -o o/main.o -Wno-write-strings
 echo "linking..."
