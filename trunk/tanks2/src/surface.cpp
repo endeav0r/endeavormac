@@ -20,20 +20,20 @@ Surface :: Surface (char * filename)
 	}
 	else
 	{
-		this->width = this->bitmap->w;
-		this->height = this->bitmap->h;
+		this->width = (int) this->bitmap->w;
+		this->height = (int) this->bitmap->h;
 	}
 }
 
 
 
-Surface :: Surface (int width, int height)
-{
+Surface :: Surface (int width, int hei
+
 	this->bitmap = create_bitmap(width, height);
+	clear_bitmap(this->bitmap);
 	if (this->bitmap == NULL)
 	{
-		this->width = 0;
-		this->height = 0;
+		throw Exception(0, "Failed to create bitmap");
 	}
 	else
 	{
@@ -46,8 +46,8 @@ Surface :: Surface (int width, int height)
 
 Surface :: ~Surface ()
 {
-	//if (this->bitmap != NULL)
-		//destroy_bitmap(this->bitmap);
+	if (this->bitmap != NULL)
+		destroy_bitmap(this->bitmap);
 }
 
 
@@ -97,11 +97,16 @@ int Surface :: blitter (Surface * s, int x, int y)
 		debug(buf);
 	#endif
 	
-	//this->acquire();
-	//s->acquire();
+	if (s->bitmap == NULL)
+		throw Exception(0, "blitter: s->bitmap == NULL");
+	if (this->bitmap == NULL)
+		throw Exception(0, "blitter: this->bitmap == NULL");
+	
+	this->acquire();
+	s->acquire();
 	blit(s->bitmap, this->bitmap, 0, 0, x, y, s->width, s->height);
-	//s->release();
-	//this->release();
+	s->release();
+	this->release();
 	
 	return 1;
         
