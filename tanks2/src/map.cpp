@@ -17,8 +17,8 @@ Map :: Map (int width, int height)
 Map :: ~Map ()
 {
 	debug("~map");
-	//if (this->locations != NULL)
-		//free(this->locations);
+	if (this->locations != NULL)
+		free(this->locations);
 }
 
 
@@ -39,24 +39,23 @@ void Map :: randomize (double nonpassable_frequency)
 		throw Exception(MAP_BAD_SIZE, "Map->height == 0");
 	
 	frequency = ((int) (nonpassable_frequency * 100)) % 100;
-	//frequency = 15;
 	
-	//srand((int) clock());
+	srand((int) clock());
 	
-	for (x = 0; x < this->width; x++)
+	for (y = 0; y < this->height; y++)
 	{
-		row = x * this->width;
-		for (y = 0; y < this->height; y++)
+		row = y * this->width;
+		for (x = 0; x < this->width; x++)
 		{
 			rand_value = (int) (rand() / 10);
 			rand_value %= 100;
 			if (rand_value <= frequency)
 			{
-				this->locations[row + y] = MAP_NONPASSABLE;
+				this->locations[row + x] = MAP_NONPASSABLE;
 			}
 			else
 			{
-				this->locations[row + y] = MAP_PASSABLE;
+				this->locations[row + x] = MAP_PASSABLE;
 			}
 		}
 	}
@@ -67,5 +66,5 @@ void Map :: randomize (double nonpassable_frequency)
 
 int Map :: get_location (int x, int y)
 {
-	return this->locations[(x * this->width) + y];
+	return this->locations[(y * this->width) + x];
 }
