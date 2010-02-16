@@ -1,23 +1,28 @@
 #include "exception.hpp"
 
-Exception :: Exception (int code, std::string description)
+
+Exception :: Exception (int code, char * description)
 {
 	this->code = code;
-	this->description = description;
+	this->description = (char *) malloc(strlen(description));
+	if (this->description == NULL)
+		// throwing an exception here seems like such a bad idea
+		throw 1;
+	strcpy(this->description, description);
 }
 
 
 
 Exception :: ~Exception ()
 {
-	printf("~exception");
+	//free(this->description);
 }
 
 
 
 void Exception :: display ()
 {
-	printf("ERROR: %s\n", this->description.c_str());
+	printf("ERROR: %s\n", this->description);
 }
 
 

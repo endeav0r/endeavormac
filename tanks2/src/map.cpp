@@ -16,7 +16,6 @@ Map :: Map (int width, int height)
 
 Map :: ~Map ()
 {
-	debug("~map");
 	if (this->locations != NULL)
 		free(this->locations);
 }

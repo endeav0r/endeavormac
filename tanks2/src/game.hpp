@@ -1,6 +1,8 @@
 #ifndef game_H
 #define game_H
 
+#include <list>
+
 #include "map.hpp"
 #include "surface.hpp"
 
@@ -19,22 +21,34 @@
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32
 
+class Tank;
+
 class Game
 {
 
 	private :
+	
 		Map * map;
 		Surface * screen_buffer;
+		
 		// oh no, hard coded object pointers, wah wah cry me a river. man up
 		Surface * passable_tiles[3];
 		Surface * nonpassable_tiles[1];
 		Surface * tank_tiles[4];
+		
+		std::list <Tank *> tanks;
 
 	public :
 		Game ();
 		~Game ();
 		void entry();
 		void draw_screen_buffer ();
+		
+		bool add_tank(char * source_filename);
+		
+		bool location_free(int x, int y);
+		
+		std::list <Tank *> get_tanks ();
 
 };
 #endif 

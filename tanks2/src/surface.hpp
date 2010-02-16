@@ -30,7 +30,7 @@ class Surface
 		int get_width();
 		int get_height();
 		
-		int blitter(Surface * s, int x, int y);
+		int blitter(Surface * s, int x, int y, bool masked=false);
 		
 };
 

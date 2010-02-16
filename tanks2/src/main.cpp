@@ -17,8 +17,17 @@ int main ()
 	set_palette(desktop_palette);
 	install_keyboard();
 	
-	Game game;
-	game.entry();
+	try
+	{
+		Game game;
+		game.add_tank("tanks/square.lua");
+		game.add_tank("tanks/square.lua");
+		game.entry();
+	}
+	catch (Exception e)
+	{
+		(e).display();
+	}
 	
 	debug("final");
 	
