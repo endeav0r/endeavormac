@@ -39,8 +39,6 @@ void Map :: randomize (double nonpassable_frequency)
 	
 	frequency = ((int) (nonpassable_frequency * 100)) % 100;
 	
-	srand((int) clock());
-	
 	for (y = 0; y < this->height; y++)
 	{
 		row = y * this->width;

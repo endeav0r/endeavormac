@@ -10,7 +10,9 @@ echo "game"
 g++ -g -O2 -Wall -c src/game.cpp -o o/game.o -Wno-write-strings
 echo "tank"
 g++ -g -O2 -Wall -c src/tank.cpp -o o/tank.o -Wno-write-strings
+echo "team"
+g++ -g -O2 -Wall -c src/team.cpp -o o/team.o -Wno-write-strings
 echo "main"
 g++ -g -O2 -Wall -c src/main.cpp -o o/main.o -Wno-write-strings
 echo "linking..."
-g++ -g -O2 -Wall o/map.o o/exception.o o/surface.o o/game.o o/tank.o o/main.o `pkg-config lua5.1 --libs --cflags` `allegro-config --libs --cppflags` -o game
+g++ -g -O2 -Wall o/map.o o/exception.o o/surface.o o/game.o o/tank.o o/main.o o/team.o `pkg-config lua5.1 --libs --cflags` `allegro-config --libs --cppflags` -o game
