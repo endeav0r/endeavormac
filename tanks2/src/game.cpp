@@ -166,8 +166,9 @@ void Game :: add_team (char * source_filename, int tanks_n)
 		team->add_tank(x, y);
 	}
 	
-	
 }
+
+
 		
 
 /*
@@ -204,6 +205,7 @@ bool Game :: location_free (int x, int y)
 	std::list <Tank *> tanks;
 	std::list <Team *> :: iterator team_i;
 	std::list <Tank *> :: iterator tank_i;
+	Tank_Action * action;
 	
 	if ((x < 0) || (x >= GAME_WIDTH))
 		return false;
@@ -218,7 +220,13 @@ bool Game :: location_free (int x, int y)
 		tanks = (*team_i)->get_tanks();
 		for(tank_i = tanks.begin(); tank_i != tanks.end(); tank_i++)
 		{
-			if (((*tank_i)->get_x() == x) && ((*tank_i)->get_y() == y))
+			action = (*tank_i)->get_action();
+			if (action->type == TANK_ACTION_MOVE)
+			{
+				if ((action->x == x) && (action->y == y))
+					return false;
+			}
+			else if (((*tank_i)->get_x() == x) && ((*tank_i)->get_y() == y))
 				return false;
 		}
 	}

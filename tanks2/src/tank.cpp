@@ -141,6 +141,13 @@ int Tank :: get_orientation ()
 
 
 
+Tank_Action * Tank :: get_action()
+{
+	return &(this->action);
+}
+
+
+
 Tank * Tank :: get_this ()
 {
 	return this;
@@ -355,12 +362,6 @@ int Tank :: l_get_enemy_locations (lua_State * l)
 	return 1;
 
 }
-
-
-
-
-
-
 
 
 
