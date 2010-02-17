@@ -20,8 +20,8 @@ int main ()
 	try
 	{
 		Game game;
-		game.add_tank("tanks/square.lua");
-		game.add_tank("tanks/square.lua");
+		game.add_team("tanks/square.lua", 3);
+		game.add_team("tanks/square.lua", 3);
 		game.entry();
 	}
 	catch (Exception e)

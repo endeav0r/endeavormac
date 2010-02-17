@@ -2,9 +2,12 @@
 #define game_H
 
 #include <list>
+#include <ctime>
 
 #include "map.hpp"
 #include "surface.hpp"
+#include "team.hpp"
+#include "tank.hpp"
 
 #define GAME_WIDTH 20
 #define GAME_HEIGHT 15
@@ -21,8 +24,6 @@
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32
 
-class Tank;
-
 class Game
 {
 
@@ -32,11 +33,11 @@ class Game
 		Surface * screen_buffer;
 		
 		// oh no, hard coded object pointers, wah wah cry me a river. man up
-		Surface * passable_tiles[3];
-		Surface * nonpassable_tiles[1];
-		Surface * tank_tiles[4];
+		Surface * passable_tiles[PASSABLE_TILES_N];
+		Surface * nonpassable_tiles[NONPASSABLE_TILES_N];
+		Surface * tank_tiles[TANK_TILES_N];
 		
-		std::list <Tank *> tanks;
+		std::list <Team *> teams;
 
 	public :
 		Game ();
@@ -44,11 +45,11 @@ class Game
 		void entry();
 		void draw_screen_buffer ();
 		
-		bool add_tank(char * source_filename);
+		void add_team(char * source_filename, int tanks_n);
 		
 		bool location_free(int x, int y);
 		
-		std::list <Tank *> get_tanks ();
+		std::list <Team *> get_teams ();
 
 };
 #endif 

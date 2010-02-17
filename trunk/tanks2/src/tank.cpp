@@ -1,8 +1,9 @@
 #include "tank.hpp"
 #include "game.hpp"
+#include "team.hpp"
 
 
-Tank :: Tank (Game * game, char * lua_source)
+Tank :: Tank (Game * game, Team * team, char * lua_source)
 {
 	this->x = 0;
 	this->y = 0;
@@ -10,6 +11,7 @@ Tank :: Tank (Game * game, char * lua_source)
 	int error;
 	char * lua_syntax_error_description;
 	
+	this->team = team;
 	this->game = game;
 	
 	this->action.type = TANK_ACTION_NONE;
@@ -85,7 +87,7 @@ void Tank :: turn ()
 
 void Tank :: process_action (int action_type)
 {
-	if (action_type == TANK_ACTION_MOVE)
+	if (action_type == this->action.type)
 	{
 		this->action.type = TANK_ACTION_NONE;
 		
@@ -312,35 +314,43 @@ int Tank :: l_get_enemy_locations (lua_State * l)
 {
 	int table_index = 0;
 	Tank * this_tank;
+	std::list <Team *> teams;
+	std::list <Team *> :: iterator team_i;
 	std::list <Tank *> tanks;
 	std::list <Tank *> :: iterator tank_i;
 	
 	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
 	
-	tanks = this_tank->game->get_tanks();
+	teams = this_tank->game->get_teams();
 	
 	// create new table (referred to as enemy_locations in these comments)
 	lua_newtable(l);
 	
-	for (tank_i = tanks.begin(); tank_i != tanks.end(); tank_i++)
+	for (team_i = teams.begin(); team_i != teams.end(); team_i++)
 	{
-		if (*tank_i != this_tank)
+		if (*team_i == this_tank->team)
+			continue;
+			
+		tanks = (*team_i)->get_tanks();
+	
+		for (tank_i = tanks.begin(); tank_i != tanks.end(); tank_i++)
 		{
-			// top, bottom (these comments keep track of what's on the stack)
-			// enemy_locations
-			lua_pushinteger(l, table_index++); // table_index, enemy_locations
-			lua_newtable(l); // new_table_row, table_index, enemy_locations
-			lua_pushinteger(l, 0); // 0, new_table_row, table_index, enemy_locations
-			lua_pushinteger(l, (*tank_i)->get_x()); // x, 0, new_table_row, table_index, enemy_locations
-			lua_settable(l, -3); // new_table_row, table_index, enemy_locations
-			lua_pushinteger(l, 1);
-			lua_pushinteger(l, (*tank_i)->get_y());
-			lua_settable(l, -3); // new_table_row, table_index, enemy_locations
-			lua_settable(l, -3); // enemy_locations
+			if (*tank_i != this_tank)
+			{
+				// top, bottom (these comments keep track of what's on the stack)
+				// enemy_locations
+				lua_pushinteger(l, table_index++); // table_index, enemy_locations
+				lua_newtable(l); // new_table_row, table_index, enemy_locations
+				lua_pushinteger(l, 0); // 0, new_table_row, table_index, enemy_locations
+				lua_pushinteger(l, (*tank_i)->get_x()); // x, 0, new_table_row, table_index, enemy_locations
+				lua_settable(l, -3); // new_table_row, table_index, enemy_locations
+				lua_pushinteger(l, 1);
+				lua_pushinteger(l, (*tank_i)->get_y());
+				lua_settable(l, -3); // new_table_row, table_index, enemy_locations
+				lua_settable(l, -3); // enemy_locations
+			}
 		}
 	}
-	
-	//lua_pushinteger(l, GAME_HEIGHT);
 	
 	return 1;
 

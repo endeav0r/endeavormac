@@ -24,8 +24,9 @@ typedef struct
 	int type;
 	int x;
 	int y;
-} tank_action;
+} Tank_Action;
 
+class Team;
 class Game;
 
 class Tank
@@ -36,10 +37,11 @@ class Tank
 		int orientation;
 		lua_State * l_vm;
 		Game * game;
-		tank_action action;
+		Team * team;
+		Tank_Action action;
 	
 	public :
-		Tank (Game * gamestate, char * lua_source);
+		Tank (Game * game, Team * team, char * lua_source);
 		~Tank();
 		
 		void turn ();
