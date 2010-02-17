@@ -52,6 +52,7 @@ class Tank
 		int get_x();
 		int get_y();
 		int get_orientation();
+		Tank_Action * get_action();
 		Tank * get_this(); // never thought i'd need this... get it
 		
 		
