@@ -21,7 +21,7 @@ int main ()
 	{
 		Game game;
 		game.add_team("tanks/square.lua", 7);
-		game.add_team("tanks/square.lua", 7);
+		game.add_team("tanks/go_to_flag.lua", 7);
 		game.entry();
 	}
 	catch (Exception e)

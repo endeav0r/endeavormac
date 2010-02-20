@@ -22,6 +22,11 @@ Game :: Game ()
 	this->tank_tiles[2] = new Surface("images/tank_green.bmp");
 	this->tank_tiles[3] = new Surface("images/tank_gray.bmp");
 	
+	this->flag_tiles[0] = new Surface("images/flag_blue.bmp");
+	this->flag_tiles[1] = new Surface("images/flag_red.bmp");
+	this->flag_tiles[2] = new Surface("images/flag_green.bmp");
+	this->flag_tiles[3] = new Surface("images/flag_gray.bmp");
+	
 }
 
 
@@ -50,8 +55,6 @@ Game :: ~Game ()
 	}
 		
 }
-	
-	
 
 
 
@@ -64,22 +67,61 @@ void Game :: entry ()
 	
 	while (key != 27)
 	{
-		
-
 
 		this->draw_screen_buffer();
 		acquire_screen();
 		blit(this->screen_buffer->get_bitmap(), screen, 0, 0, 0, 0, this->screen_buffer->get_width(), this->screen_buffer->get_height());
 		release_screen();
 
+		// team turns (run lua scripts)
 		for (team_i = this->teams.begin(); team_i != this->teams.end(); team_i++)
 			(*team_i)->turn();
-					
-		key = (char) readkey();
+	
+		// move teams
+		for (team_i = this->teams.begin(); team_i != this->teams.end(); team_i++)
+			(*team_i)->process_action(TANK_ACTION_MOVE);
 		
-		//rest(250);
+		// check for flag captures
+		this->check_for_flag_captures();
+		
+		rest(100);
+		
+		if (keypressed())
+			key = (char) readkey();
+		
 	}
 	
+}
+
+
+
+void Game :: check_for_flag_captures ()
+{
+	std::list <Team *> :: iterator team_i;
+	std::list <Team *> :: iterator flag_team_i;
+	
+	std::list <Tank *> tanks;
+	std::list <Tank *> :: iterator tank_i;
+	
+	for (team_i = this->teams.begin(); team_i != this->teams.end(); team_i++)
+	{
+		tanks = (*team_i)->get_tanks();
+		for (tank_i = tanks.begin(); tank_i != tanks.end(); tank_i++)
+		{
+			for (flag_team_i = this->teams.begin(); flag_team_i != this->teams.end(); flag_team_i++)
+			{
+				if ((*flag_team_i) != (*team_i))
+				{
+					if (((*flag_team_i)->get_flag_x() == (*tank_i)->get_x())
+					    && ((*flag_team_i)->get_flag_y() == (*tank_i)->get_y()))
+					{
+						(*team_i)->increment_score();
+						(*flag_team_i)->place_flag_randomly();
+					}
+				}
+			}
+		}
+	}
 }
 
 
@@ -96,6 +138,8 @@ void Game :: draw_screen_buffer ()
 	std::list <Team *> :: iterator team_i;
 	int team_tile_i = 0; // tile for a team
 	
+	
+	// draw map tiles
 	for (x = 0; x < GAME_WIDTH; x++)
 	{
 		for (y = 0; y < GAME_HEIGHT; y++)
@@ -114,15 +158,10 @@ void Game :: draw_screen_buffer ()
 		}
 	}
 	
-	// move teams
+	// draw teams
 	for (team_i = this->teams.begin(); team_i != this->teams.end(); team_i++)
 	{
-		(*team_i)->process_action(TANK_ACTION_MOVE);
-	}
-	
-	// draw tanks
-	for (team_i = this->teams.begin(); team_i != this->teams.end(); team_i++)
-	{
+		// draw tanks
 		tanks = (*team_i)->get_tanks();
 		for (tank_i = tanks.begin(); tank_i != tanks.end(); tank_i++)
 		{
@@ -132,6 +171,11 @@ void Game :: draw_screen_buffer ()
 										 true,
 										 (*tank_i)->get_orientation());
 		}
+		// draw flags
+		this->screen_buffer->blitter(this->flag_tiles[team_tile_i],
+		                             (*team_i)->get_flag_x() * TILE_WIDTH,
+		                             (*team_i)->get_flag_y() * TILE_HEIGHT,
+		                             true);
 		if (++team_tile_i > TANK_TILES_N)
 			team_tile_i = 0;
 	}
@@ -149,7 +193,7 @@ void Game :: add_team (char * source_filename, int tanks_n)
 	
 	int tank_i;
 	
-	team = new Team(this, source_filename);
+	team = new Team(this, source_filename, this->teams.size());
 	
 	this->teams.push_back(team);
 	
@@ -157,7 +201,7 @@ void Game :: add_team (char * source_filename, int tanks_n)
 	{
 		x = rand() % GAME_WIDTH;
 		y = rand() % GAME_HEIGHT;
-		while (this->location_free(x, y) == false)
+		while (this->location_free(x, y, true) == false)
 		{
 			x = rand() % GAME_WIDTH;
 			y = rand() % GAME_HEIGHT;
@@ -165,6 +209,8 @@ void Game :: add_team (char * source_filename, int tanks_n)
 		
 		team->add_tank(x, y);
 	}
+	
+	team->place_flag_randomly();
 	
 }
 
@@ -199,7 +245,7 @@ bool Game :: add_tank (char * source_filename)
 */
 	
 
-bool Game :: location_free (int x, int y)
+bool Game :: location_free (int x, int y, bool include_flags)
 {
 	
 	std::list <Tank *> tanks;
@@ -227,6 +273,11 @@ bool Game :: location_free (int x, int y)
 					return false;
 			}
 			else if (((*tank_i)->get_x() == x) && ((*tank_i)->get_y() == y))
+				return false;
+		}
+		if (include_flags == true)
+		{
+			if (((*team_i)->get_flag_x() == x) && ((*team_i)->get_flag_y() == y))
 				return false;
 		}
 	}

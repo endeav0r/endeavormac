@@ -3,10 +3,11 @@
 #include "team.hpp"
 
 
-Tank :: Tank (Game * game, Team * team, char * lua_source)
+Tank :: Tank (Game * game, Team * team, char * lua_source, int identifier)
 {
 	this->x = 0;
 	this->y = 0;
+	this->identifier = identifier;
 	
 	int error;
 	char * lua_syntax_error_description;
@@ -28,9 +29,12 @@ Tank :: Tank (Game * game, Team * team, char * lua_source)
 	
 	if (error == 0)
 	{
+		this->l_pcall(l_vm, 0, 0);
+		/*
 		error = lua_pcall(l_vm, 0, 0, 0);
 		if (error != 0)
 			throw Exception(LUA_P_CALL_ERROR, "lua_p_call returned an error");
+		*/
 	}
 	else if (error == LUA_ERRSYNTAX)
 	{
@@ -39,7 +43,7 @@ Tank :: Tank (Game * game, Team * team, char * lua_source)
 		lua_settop(this->l_vm, -1);
 	}
 	else
-		throw Exception(LUA_UNKNOWN_ERROR, "Unknown lua error");
+		throw Exception(LUA_UNKNOWN_ERROR, "Unknown lua error while loading lua file");
 	
 	// register lua functions for user
 	this->register_lua_functions();
@@ -52,11 +56,14 @@ void Tank :: register_lua_functions ()
 {
 	this->register_lua_function("move", this->l_move);
 	this->register_lua_function("location_free", this->l_location_free);
-	this->register_lua_function("getx", this->l_getx);
-	this->register_lua_function("gety", this->l_gety);
-	this->register_lua_function("get_game_width", this->l_getx);
-	this->register_lua_function("get_game_height", this->l_gety);
-	this->register_lua_function("get_enemy_locations", this->l_get_enemy_locations);
+	this->register_lua_function("get_x", this->l_get_x);
+	this->register_lua_function("get_y", this->l_get_y);
+	this->register_lua_function("get_identifier", this->l_get_identifier);
+	this->register_lua_function("get_game_width", this->l_get_game_width);
+	this->register_lua_function("get_game_height", this->l_get_game_height);
+	this->register_lua_function("get_team_identifier", this->l_get_team_identifier);
+	this->register_lua_function("get_tanks", this->l_get_tanks);
+	this->register_lua_function("get_flags", this->l_get_flags);
 }
 
 
@@ -137,6 +144,13 @@ int Tank :: get_y ()
 int Tank :: get_orientation ()
 {
 	return this->orientation;
+}
+
+
+
+int Tank :: get_identifier ()
+{
+	return this->identifier;
 }
 
 
@@ -257,7 +271,54 @@ int Tank :: l_location_free (lua_State * l)
 
 
 
-int Tank :: l_getx (lua_State * l)
+int Tank :: l_get_flags (lua_State * l)
+{
+	
+	Tank * this_tank;
+	
+	std::list <Team *> :: iterator team_i;
+	std::list <Team *> teams;
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	teams = this_tank->game->get_teams();
+
+	lua_newtable(l);
+	
+	for (team_i = teams.begin(); team_i != teams.end(); team_i++)
+	{
+		lua_pushinteger(l, (*team_i)->get_identifier());
+		lua_newtable(l);
+		lua_pushstring(l, "x");
+		lua_pushinteger(l, (*team_i)->get_flag_x());
+		lua_settable(l, -3);
+		lua_pushstring(l, "y");
+		lua_pushinteger(l, (*team_i)->get_flag_y());
+		lua_settable(l, -3);
+		lua_settable(l, -3);
+	}
+	
+	return 1;
+	
+}
+
+
+
+int Tank :: l_get_team_identifier (lua_State * l)
+{
+	
+	Tank * this_tank;
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	
+	lua_pushinteger(l, this_tank->team->get_identifier());
+	
+	return 1;
+
+}
+
+
+
+int Tank :: l_get_x (lua_State * l)
 {
 	
 	Tank * this_tank;
@@ -272,7 +333,7 @@ int Tank :: l_getx (lua_State * l)
 
 
 
-int Tank :: l_gety (lua_State * l)
+int Tank :: l_get_y (lua_State * l)
 {
 	
 	Tank * this_tank;
@@ -280,6 +341,21 @@ int Tank :: l_gety (lua_State * l)
 	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
 	
 	lua_pushinteger(l, this_tank->get_y());
+	
+	return 1;
+
+}
+
+
+
+int Tank :: l_get_identifier (lua_State * l)
+{
+	
+	Tank * this_tank;
+	
+	this_tank = (Tank *) lua_topointer(l, lua_upvalueindex(1));
+	
+	lua_pushinteger(l, this_tank->get_identifier());
 	
 	return 1;
 
@@ -317,9 +393,9 @@ int Tank :: l_get_game_height (lua_State * l)
 
 
 
-int Tank :: l_get_enemy_locations (lua_State * l)
+int Tank :: l_get_tanks (lua_State * l)
 {
-	int table_index = 0;
+	
 	Tank * this_tank;
 	std::list <Team *> teams;
 	std::list <Team *> :: iterator team_i;
@@ -335,8 +411,6 @@ int Tank :: l_get_enemy_locations (lua_State * l)
 	
 	for (team_i = teams.begin(); team_i != teams.end(); team_i++)
 	{
-		if (*team_i == this_tank->team)
-			continue;
 			
 		tanks = (*team_i)->get_tanks();
 	
@@ -346,7 +420,7 @@ int Tank :: l_get_enemy_locations (lua_State * l)
 			{
 				// top, bottom (these comments keep track of what's on the stack)
 				// enemy_locations
-				lua_pushinteger(l, table_index++); // table_index, enemy_locations
+				lua_pushinteger(l, (*team_i)->get_identifier()); // table_index, enemy_locations
 				lua_newtable(l); // new_table_row, table_index, enemy_locations
 				lua_pushinteger(l, 0); // 0, new_table_row, table_index, enemy_locations
 				lua_pushinteger(l, (*tank_i)->get_x()); // x, 0, new_table_row, table_index, enemy_locations

@@ -35,13 +35,14 @@ class Tank
 		int x;
 		int y;
 		int orientation;
+		int identifier;
 		lua_State * l_vm;
 		Game * game;
 		Team * team;
 		Tank_Action action;
 	
 	public :
-		Tank (Game * game, Team * team, char * lua_source);
+		Tank (Game * game, Team * team, char * lua_source, int identifier);
 		~Tank();
 		
 		void turn ();
@@ -52,6 +53,7 @@ class Tank
 		int get_x();
 		int get_y();
 		int get_orientation();
+		int get_identifier();
 		Tank_Action * get_action();
 		Tank * get_this(); // never thought i'd need this... get it
 		
@@ -62,11 +64,14 @@ class Tank
 		
 		static int l_move (lua_State * l);
 		static int l_location_free (lua_State * l);
-		static int l_getx (lua_State *l);
-		static int l_gety (lua_State *l);
-		static int l_get_game_width (lua_State *l);
-		static int l_get_game_height (lua_State *l);
-		static int l_get_enemy_locations (lua_State *l);
+		static int l_get_x (lua_State * l);
+		static int l_get_y (lua_State * l);
+		static int l_get_identifier (lua_State * l);
+		static int l_get_game_width (lua_State * l);
+		static int l_get_game_height (lua_State * l);
+		static int l_get_team_identifier (lua_State * l);
+		static int l_get_flags (lua_State * l);
+		static int l_get_tanks (lua_State * l);
 };
 
 #endif

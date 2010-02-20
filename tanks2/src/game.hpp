@@ -20,6 +20,7 @@
 #define PASSABLE_TILES_N 3
 #define NONPASSABLE_TILES_N 1
 #define TANK_TILES_N 4
+#define FLAG_TILES_N 4
 
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32
@@ -36,6 +37,7 @@ class Game
 		Surface * passable_tiles[PASSABLE_TILES_N];
 		Surface * nonpassable_tiles[NONPASSABLE_TILES_N];
 		Surface * tank_tiles[TANK_TILES_N];
+		Surface * flag_tiles[FLAG_TILES_N];
 		
 		std::list <Team *> teams;
 
@@ -44,10 +46,15 @@ class Game
 		~Game ();
 		void entry();
 		void draw_screen_buffer ();
+		void check_for_flag_captures();
 		
 		void add_team(char * source_filename, int tanks_n);
 		
-		bool location_free(int x, int y);
+		/*
+		 * if include_flags is set to true, then this function returns
+		 * false if a flag exists at a location
+		 */
+		bool location_free(int x, int y, bool include_flags = false);
 		
 		std::list <Team *> get_teams ();
 
