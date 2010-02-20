@@ -2,12 +2,13 @@
 #include "tank.hpp"
 #include "game.hpp"
 
-Team :: Team (Game * game, char * source_filename)
+Team :: Team (Game * game, char * source_filename, int identifier)
 {
 	this->score = 0;
 	this->flag.x = 0;
 	this->flag.y = 0;
 	this->game = game;
+	this->identifier = identifier;
 	
 	this->source_filename = (char *) malloc(strlen(source_filename));
 	if (this->source_filename == NULL)
@@ -56,11 +57,41 @@ void Team :: process_action (int action_type)
 
 
 
+void Team :: place_flag_randomly ()
+{
+	int x;
+	int y;
+	
+	x = rand() % GAME_WIDTH;
+	y = rand() % GAME_HEIGHT;
+	
+	while (this->game->location_free(x, y, true) == false)
+	{
+		x = rand() % GAME_WIDTH;
+		y = rand() % GAME_HEIGHT;
+	}
+	
+	this->flag.x = x;
+	this->flag.y = y;
+}
+
+
+
 void Team :: add_tank (int x, int y)
 {
+	int new_identifier;
+	
 	Tank * tank;
 	
-	tank = new Tank(this->game, this, this->source_filename);
+	if (this->tanks.size() == 0)
+		new_identifier = 0;
+	else
+	{
+		new_identifier = (this->tanks.back())->get_identifier();
+		new_identifier++;
+	}	
+	
+	tank = new Tank(this->game, this, this->source_filename, new_identifier);
 	
 	tank->set_x(x);
 	tank->set_y(y);
@@ -94,6 +125,13 @@ int Team :: get_flag_x()
 int Team :: get_flag_y()
 {
 	return this->flag.y;
+}
+
+
+
+int Team :: get_identifier ()
+{
+	return this->identifier;
 }
 
 

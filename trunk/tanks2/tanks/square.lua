@@ -21,13 +21,4 @@ function turn ()
 		end
 	end
 	
-	enemy_tanks = get_enemy_locations()
-	
-	enemy_tank_locations = ""
-	
-	for key,tank in pairs(enemy_tanks) do
-		enemy_tank_locations = enemy_tank_locations .. tank[0] .. "," .. tank[1] .. " "
-	end
-	print(enemy_tank_locations)
-	
 end
