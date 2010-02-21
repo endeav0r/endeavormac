@@ -2,6 +2,7 @@
 #define map_H
 
 #include <cstdlib>
+#include <cstdio>
 
 #include "exception.hpp"
 
@@ -22,6 +23,8 @@ class Map
 		~Map();
 		void randomize (double nonpassable_frequency);
 		int get_location (int x, int y);
+		
+		void flood_fill (int x, int y, char * data);
 };
 		
 #endif
