@@ -26,10 +26,8 @@ int main ()
 	}
 	catch (Exception e)
 	{
-		(e).display();
+		e.display();
 	}
-	
-	debug("final");
 	
 	return 1;
 

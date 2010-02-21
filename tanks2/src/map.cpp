@@ -31,6 +31,9 @@ void Map :: randomize (double nonpassable_frequency)
 	int frequency;
 	int rand_value;
 	
+	// for flood fill
+	char * data;
+	
 	
 	if (this->width == 0)
 		throw Exception(MAP_BAD_SIZE, "Map->width == 0");
@@ -57,7 +60,57 @@ void Map :: randomize (double nonpassable_frequency)
 		}
 	}
 	
+	/*
+	 * flood fill to check if this map is valid
+	 */
 	
+	data = (char *) malloc (this->width * this->height);
+	memset(data, 0, this->width * this->height);
+	
+	// we need to find a starting place
+	for (x = 0; x < this->width; x++)
+	{
+		if (this->locations[x] == MAP_PASSABLE)
+			break;
+	}
+	
+	if (x == this->width)
+		this->randomize(nonpassable_frequency);
+	else
+	{
+		this->flood_fill(x, 0, data);
+		for (x = 0; x < this->width * this->height; x++)
+		{
+			if ((this->locations[x] == MAP_PASSABLE) && (data[x] != 1))
+			{
+				this->randomize(nonpassable_frequency);
+				break;
+			}
+		}
+	}
+	
+	free(data);
+	
+}
+
+
+
+void Map :: flood_fill (int x, int y, char * data)
+{
+	if (data[y * this->width + x] == 1)
+		return;
+	
+	if (this->locations[y * this->width + x] == MAP_PASSABLE)
+		data[y * this->width + x] = 1;
+	
+	if ((x > 0) && (this->locations[y * this->width + x - 1] == MAP_PASSABLE))
+		this->flood_fill(x - 1, y, data);
+	if ((x < this->width - 1) && (this->locations[y * this->width + x + 1] == MAP_PASSABLE))
+		this->flood_fill(x + 1, y, data);
+	if ((y > 0) && (this->locations[(y-1) * this->width + x] == MAP_PASSABLE))
+		this->flood_fill(x, y - 1, data);
+	if ((y < this->height - 1) && (this->locations[(y+1) * this->width + x] == MAP_PASSABLE))
+		this->flood_fill(x, y + 1, data);
 }
 
 
