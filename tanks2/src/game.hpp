@@ -38,6 +38,7 @@ class Game
 		Surface * nonpassable_tiles[NONPASSABLE_TILES_N];
 		Surface * tank_tiles[TANK_TILES_N];
 		Surface * flag_tiles[FLAG_TILES_N];
+		Surface * turret_tile;
 		
 		std::list <Team *> teams;
 

@@ -27,6 +27,8 @@ Game :: Game ()
 	this->flag_tiles[2] = new Surface("images/flag_green.bmp");
 	this->flag_tiles[3] = new Surface("images/flag_gray.bmp");
 	
+	this->turret_tile = new Surface("images/turret.bmp");
+	
 }
 
 
@@ -48,6 +50,11 @@ Game :: ~Game ()
 		
 	for (i = 0; i < TANK_TILES_N; i++)
 		delete this->tank_tiles[i];
+		
+	for (i = 0; i < FLAG_TILES_N; i++)
+		delete this->flag_tiles[i];
+	
+	delete this->turret_tile;
 		
 	for (team_i = this->teams.begin(); team_i != this->teams.end(); team_i++)
 	{
@@ -84,7 +91,7 @@ void Game :: entry ()
 		// check for flag captures
 		this->check_for_flag_captures();
 		
-		rest(100);
+		rest((unsigned int) 200);
 		
 		if (keypressed())
 			key = (char) readkey();
@@ -170,6 +177,12 @@ void Game :: draw_screen_buffer ()
 										 (*tank_i)->get_y() * TILE_HEIGHT,
 										 true,
 										 (*tank_i)->get_orientation());
+			this->screen_buffer->blitter(this->turret_tile,
+										 (*tank_i)->get_x() * TILE_WIDTH,
+										 (*tank_i)->get_y() * TILE_HEIGHT,
+										 true,
+										 (*tank_i)->get_orientation());
+										 							 
 		}
 		// draw flags
 		this->screen_buffer->blitter(this->flag_tiles[team_tile_i],

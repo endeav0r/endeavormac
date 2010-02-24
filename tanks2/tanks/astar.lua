@@ -82,8 +82,12 @@ end
 	location[x] = x location
 	location[y] = y location
 	location[score] = score/weight of this location
+	
+	closeness is how close we have to be to the target
 --]]
-function astar (source_x, source_y, dest_x, dest_y)
+function astar (source_x, source_y, dest_x, dest_y, closeness)
+
+	closeness = closeness or 0
 
 	closed_set = {}
 	open_set = {}
@@ -99,9 +103,15 @@ function astar (source_x, source_y, dest_x, dest_y)
 		location_to_test_key = min_from_open_set(open_set)
 		
 		location = open_set[location_to_test_key]
-		if location['x'] == dest_x and location['y'] == dest_y then
+		if location['x'] >= dest_x - closeness and
+		   location['x'] <= dest_x + closeness and 
+		   location['y'] >= dest_y - closeness and
+		   location['y'] <= dest_y + closeness then
 			-- we keep tracing up the path until we find the parent who's
 			-- x and y == source_x and source_y
+			if location['x'] == source_x and location['y'] == source_y then
+				return location
+			end
 			while location['parent']['x'] ~= source_x or location['parent']['y'] ~= source_y do
 				location = location['parent']
 			end
@@ -128,6 +138,10 @@ function astar (source_x, source_y, dest_x, dest_y)
 			end
 		end
 	end
+	
+	-- If we get here, we've searched the entire map, and we can't reach the destination
+	-- It's time for drastic measures
+	
 	
 	return false
 	

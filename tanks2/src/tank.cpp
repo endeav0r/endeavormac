@@ -407,30 +407,34 @@ int Tank :: l_get_tanks (lua_State * l)
 	teams = this_tank->game->get_teams();
 	
 	// create new table (referred to as enemy_locations in these comments)
-	lua_newtable(l);
+	// top, bottom (these comments keep track of what's on the stack)
+	lua_newtable(l); // enemy_locations
 	
 	for (team_i = teams.begin(); team_i != teams.end(); team_i++)
 	{
 			
 		tanks = (*team_i)->get_tanks();
+		
+		lua_pushinteger(l, (*team_i)->get_identifier()); // team_id, enemy_locations
+		lua_newtable(l); // team_table, team_id, enemy_locations
 	
 		for (tank_i = tanks.begin(); tank_i != tanks.end(); tank_i++)
 		{
 			if (*tank_i != this_tank)
 			{
-				// top, bottom (these comments keep track of what's on the stack)
-				// enemy_locations
-				lua_pushinteger(l, (*team_i)->get_identifier()); // table_index, enemy_locations
-				lua_newtable(l); // new_table_row, table_index, enemy_locations
-				lua_pushinteger(l, 0); // 0, new_table_row, table_index, enemy_locations
-				lua_pushinteger(l, (*tank_i)->get_x()); // x, 0, new_table_row, table_index, enemy_locations
-				lua_settable(l, -3); // new_table_row, table_index, enemy_locations
-				lua_pushinteger(l, 1);
+				lua_pushinteger(l, (*tank_i)->get_identifier()); // tank_id, team_table, team_id, enemy_locations
+				lua_newtable(l); // new_table_row, tank_id, team_table, team_id, enemy_locations
+				lua_pushstring(l, "x"); // "x", tank_table, tank_id, team_table, team_id, enemy_locations
+				lua_pushinteger(l, (*tank_i)->get_x()); // tank_x, "x", tank_table, tank_id, team_table, team_id, enemy_locations
+				lua_settable(l, -3); // tank_table, tank_id, team_table, team_id, enemy_locations
+				lua_pushstring(l, "y");
 				lua_pushinteger(l, (*tank_i)->get_y());
-				lua_settable(l, -3); // new_table_row, table_index, enemy_locations
-				lua_settable(l, -3); // enemy_locations
+				lua_settable(l, -3); // tank_table, tank_id, team_table, team_id, enemy_locations
+				lua_settable(l, -3); // team_table, team_id, enemy_locations
 			}
 		}
+		
+		lua_settable(l, -3); // enemy_locations
 	}
 	
 	return 1;
