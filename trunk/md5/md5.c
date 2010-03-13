@@ -342,7 +342,7 @@ void md5_process_block (md5_context * context)
 	a = b + (md5_rotl((uint32_t) a + md5_H(b, c, d) + X[9]  + T_45, 4));
 	d = a + (md5_rotl((uint32_t) d + md5_H(a, b, c) + X[12] + T_46, 11));
 	c = d + (md5_rotl((uint32_t) c + md5_H(d, a, b) + X[15] + T_47, 16));
-	b = c + (md5_rotl((uint32_t) b + md5_H(c, d, a) + X[12] + T_48, 23));
+	b = c + (md5_rotl((uint32_t) b + md5_H(c, d, a) + X[2] + T_48, 23));
 	
 	// round 3
 	a = b + (md5_rotl((uint32_t) a + md5_I(b, c, d) + X[0]  + T_49, 6));
