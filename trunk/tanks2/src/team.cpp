@@ -10,7 +10,8 @@ Team :: Team (Game * game, char * source_filename, int identifier)
 	this->game = game;
 	this->identifier = identifier;
 	
-	this->source_filename = (char *) malloc(strlen(source_filename));
+	this->source_filename = (char *) malloc(strlen(source_filename) + 1);
+	memset(this->source_filename, 0, strlen(source_filename) + 1);
 	if (this->source_filename == NULL)
 		throw Exception(MALLOC_FAIL, "Failed allocating memory for team source_filename");
 	strcpy(this->source_filename, source_filename);
