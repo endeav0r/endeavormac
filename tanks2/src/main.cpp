@@ -21,7 +21,7 @@ int main ()
 	try
 	{
 		Game game;
-		game.add_team("tanks/kill.lua", 1);
+		game.add_team("tanks/go_to_flag.lua", 1);
 		game.add_team("tanks/go_to_flag.lua", 1);
 		game.entry();
 	}
