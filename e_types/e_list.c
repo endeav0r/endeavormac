@@ -42,7 +42,16 @@ int e_list_insert (e_list_t * list, void * data, int size)
 	e_list_item_t * next;
 	
 	next = (e_list_item_t *) malloc(sizeof(e_list_item_t));
+	if (next == NULL)
+		return -1;
+		
 	next->data = (void *) malloc(size);
+	if (next->data == NULL)
+	{
+		free(next);
+		return -1;
+	}
+	
 	memcpy(next->data, data, size);
 	next->size = size;
 	next->next = NULL;
@@ -62,6 +71,66 @@ int e_list_insert (e_list_t * list, void * data, int size)
 	
 	return 0;
 
+}
+
+
+
+int e_list_insert_front (e_list_t * list, void * data, int size)
+{
+
+	e_list_item_t * item;
+	
+	item = (e_list_item_t *) malloc(sizeof(e_list_item_t));
+	if (item == NULL)
+		return -1;
+		
+	item->data = (void *) malloc(size);
+	if (item->data == NULL)
+	{
+		free(item);
+		return -1;
+	}
+	
+	memcpy(item->data, data, size);
+	item->next = list->first;
+	list->first = item;
+	if (list->last == NULL)
+		list->last = item;
+	
+	list->size++;
+	
+	return 0;
+	
+}
+	
+	
+	
+
+int e_list_pop_front (e_list_t * list)
+{
+
+	e_list_item_t * item;
+	
+	if (list->first == NULL)
+		return 0;
+	
+	item = list->first;
+	
+	if (item->next != NULL)
+		list->first = item->next;
+	else
+	{
+		list->first = NULL;
+		list->last = NULL;
+	}
+	
+	free(item->data);
+	free(item);
+	
+	list->size--;
+	
+	return 0;
+	
 }
 
 

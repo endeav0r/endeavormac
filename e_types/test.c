@@ -48,6 +48,22 @@ int main ()
 		printf("%d ", *number_ptr);
 	printf("\n");
 	
+	number = 5;
+	if (e_list_insert_front(list, &number, sizeof(int)))
+		printf("error inserting item to front of list\n");
+	
+	e_list_iterator_reset(list);
+	while ((number_ptr = e_list_iterator_next(list)) != NULL)
+		printf("%d ", *number_ptr);
+	printf("\n");
+	
+	e_list_pop_front(list);
+	
+	e_list_iterator_reset(list);
+	while ((number_ptr = e_list_iterator_next(list)) != NULL)
+		printf("%d ", *number_ptr);
+	printf("\n");
+	
 	e_tree_destroy(tree);
 	e_list_destroy(list);
 	
