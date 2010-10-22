@@ -26,7 +26,16 @@ e_list_t * e_list_create  ();
 void       e_list_destroy (e_list_t * list);
 
 // returns 0 on success, -1 on error (well doesn't return anything yet)
+// adds element to end of list
 int        e_list_insert  (e_list_t * list, void * data, int size);
+
+// returns 0 on success, -1 on error
+// adds element to beginning of list
+int        e_list_insert_front (e_list_t * list, void * data, int size);
+
+// removes element from beginning of list
+// returns 0 on success, -1 on error
+int        e_list_pop_front (e_list_t * list);
 
 // saves the list to filename
 // returns 0 on success, -1 on failure
