@@ -1,0 +1,8 @@
+test_variable = 0
+print test_variable
+test_variable = 8
+print test_variable
+test_variable = 8 + test_variable + 2
+print test_variable
+test_variable = test_variable - 3
+print test_variable

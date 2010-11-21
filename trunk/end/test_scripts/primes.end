@@ -1,0 +1,15 @@
+n = 2
+while n < 1000
+    i = 2
+    not_prime = 0
+    while i * i < n + 1
+        if n % i == 0
+            not_prime = 1
+        end
+        i = i + 1
+    end
+    if not_prime == 0
+        print n
+    end
+    n = n + 1
+end
