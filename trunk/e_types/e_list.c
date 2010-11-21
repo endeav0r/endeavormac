@@ -39,32 +39,33 @@ void e_list_destroy (e_list_t * list)
 int e_list_insert (e_list_t * list, void * data, int size)
 {
 
-	e_list_item_t * next;
+	e_list_item_t * item;
 	
-	next = (e_list_item_t *) malloc(sizeof(e_list_item_t));
-	if (next == NULL)
+	item = (e_list_item_t *) malloc(sizeof(e_list_item_t));
+	if (item == NULL)
 		return -1;
 		
-	next->data = (void *) malloc(size);
-	if (next->data == NULL)
+	item->data = (void *) malloc(size);
+	if (item->data == NULL)
 	{
-		free(next);
+		free(item);
 		return -1;
 	}
 	
-	memcpy(next->data, data, size);
-	next->size = size;
-	next->next = NULL;
+	memcpy(item->data, data, size);
+	item->size = size;
+	item->next = NULL;
+	item->previous = list->last;
 
 	if (list->first == NULL)
 	{
-		list->first = next;
-		list->last = next;
+		list->first = item;
+		list->last = item;
 	}
 	else
 	{
-		list->last->next = next;
-		list->last = next;
+		list->last->next = item;
+		list->last = item;
 	}
 	
 	list->size++;
@@ -92,8 +93,10 @@ int e_list_insert_front (e_list_t * list, void * data, int size)
 	}
 	
 	memcpy(item->data, data, size);
+	item->previous = NULL;
 	item->next = list->first;
 	list->first = item;
+	
 	if (list->last == NULL)
 		list->last = item;
 	
@@ -117,7 +120,10 @@ int e_list_pop_front (e_list_t * list)
 	item = list->first;
 	
 	if (item->next != NULL)
+	{
 		list->first = item->next;
+		list->first->previous = NULL;
+	}
 	else
 	{
 		list->first = NULL;
@@ -359,3 +365,38 @@ void * e_list_iterator_next (e_list_t * list)
 	return data;
 
 }
+
+
+
+int e_list_iterator_delete (e_list_t * list)
+{
+
+	if (list->iterator == NULL)
+		return -1;
+
+	e_list_item_t * item;
+
+	// first element
+	if (list->first == list->iterator)
+		list->first = list->iterator->next;
+	
+	// last element
+	if (list->last == list->iterator)
+		list->last = list->iterator->previous;
+	
+	// if there's a previous element
+	if (list->iterator->previous != NULL)
+		list->iterator->previous->next = list->iterator->next;
+	// if there's a following element
+	if (list->iterator->next != NULL)
+		list->iterator->next->previous = list->iterator->previous;
+	
+	item = list->iterator;
+	list->iterator = list->iterator->next;
+	free(item->data);
+	free(item);
+	
+	return 0;
+
+}
+	

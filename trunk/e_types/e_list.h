@@ -10,6 +10,7 @@ typedef struct e_list_item_s
 	int size; // in bytes of data
 	void * data;
 	struct e_list_item_s * next;
+	struct e_list_item_s * previous;
 } e_list_item_t;
 
 typedef struct e_list_s
@@ -26,11 +27,11 @@ e_list_t * e_list_create  ();
 void       e_list_destroy (e_list_t * list);
 
 // returns 0 on success, -1 on error (well doesn't return anything yet)
-// adds element to end of list
+// copies element, adds element to end of list
 int        e_list_insert  (e_list_t * list, void * data, int size);
 
 // returns 0 on success, -1 on error
-// adds element to beginning of list
+// copies element, adds element to beginning of list
 int        e_list_insert_front (e_list_t * list, void * data, int size);
 
 // removes element from beginning of list
@@ -51,6 +52,7 @@ e_list_t * e_list_open (char * filename);
 int e_list_sort (e_list_t * list, int (* comparison_function) (void *, void *));
 
 // used internally to sort lists
+// breaks previous pointer
 e_list_item_t * e_list_sorter (e_list_item_t * items,
                                int (* comparison_function) (void *, void *));
 
@@ -64,7 +66,10 @@ e_list_item_t * e_list_sorter (e_list_item_t * items,
 void * e_list_search (e_list_t * list, int (* comparison_function)
                      (void *, void *), void * data);
 
-int    e_list_iterator_reset (e_list_t * list);
-void * e_list_iterator_next  (e_list_t * list);
+int    e_list_iterator_reset  (e_list_t * list);
+void * e_list_iterator_next   (e_list_t * list);
+
+// deletes element at iterator
+int    e_list_iterator_delete (e_list_t * list);
 
 #endif
