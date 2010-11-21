@@ -1,17 +1,18 @@
 #ifndef parser_HEADER
 #define parser_HEADER
 
-#include "lexer.h"
-#include "number.h"
-#include "string.h"
-#include "symbol.h"
-#include "vm.h"
-
 
 #define TYPE_NONE     1
 #define TYPE_FUNCTION 2
 #define TYPE_NUMBER   3
 #define TYPE_STRING   4
+
+
+#include "lexer.h"
+#include "number.h"
+#include "string.h"
+#include "symbol.h"
+#include "vm.h"
 
 
 typedef struct end_s
@@ -28,6 +29,10 @@ typedef struct end_s
 
 
 
+#include "function.h"
+
+
+
 end_t * end_create ();
 void    end_destroy (end_t * end);
 
@@ -35,6 +40,7 @@ end_symbol_t * end_evaluate (end_t * end);
 int end_statement (end_t * end);
 
 int end_parse (end_t * end, char * text);
+int end_execute (end_t * end);
 
 int end_subtract (end_t * end);
 int end_add (end_t * end);

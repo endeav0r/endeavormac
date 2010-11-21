@@ -1,4 +1,5 @@
 n = 2
+total_primes = 0
 while n < 1000
     i = 2
     not_prime = 0
@@ -9,7 +10,10 @@ while n < 1000
         i = i + 1
     end
     if not_prime == 0
-        print n
+        total_primes = total_primes + 1
     end
     n = n + 1
 end
+print "there are "
+print total_primes
+print "prime numbers between 2 and 999"

@@ -54,8 +54,11 @@ int end_arithmetic (end_t * end)
 
     if (symbol_stack->symbol->type != symbol->type)
     {
-        fprintf(stderr, "ERROR, mismatch types line %d\n", end->token->line);
-        exit(-1);
+        fprintf(stderr, "ERROR, mismatch types %d %d line %d\n",
+                symbol_stack->symbol->type, symbol->type, end->token->line);
+        #if END_DEBUG
+            printf("%p %p\n", symbol_stack->symbol, symbol);
+        #endif
     }
     
     switch (operation_token->type)
@@ -171,7 +174,14 @@ end_symbol_t * end_evaluate (end_t * end)
                     fprintf(stderr, "ERROR, %s not found line %d\n", end->token->text, end->token->line);
                     exit(-1);
                 }
-                end_vm_stack_push(end->vm, symbol, 0);
+                if (symbol->type == TYPE_FUNCTION)
+                {
+                    end_function_call(end, symbol);
+                    end_execute(end);
+                    while_break = 1;
+                }
+                else
+                    end_vm_stack_push(end->vm, symbol, 0);
                 break;
         
             case TOKEN_NUMBER :
@@ -295,9 +305,10 @@ int end_statement (end_t * end)
                 case TOKEN_SYMBOL :
                     if (end->token->next == NULL)
                     {
-                        fprintf(stderr, "syntax error line %d\n", end->lexer->line);
+                        fprintf(stderr, "syntax error 01 line %d\n", end->lexer->line);
                         exit(-1);
                     }
+                    // are we assigning something to a symbol?
                     if (end->token->next->type == TOKEN_ASSIGN)
                     {
                         #ifdef END_DEBUG
@@ -305,7 +316,7 @@ int end_statement (end_t * end)
                         #endif
                         if (end->token->next->next == NULL)
                         {
-                            fprintf(stderr, "syntax error line %d\n", end->token->line);
+                            fprintf(stderr, "syntax error 02 line %d\n", end->token->line);
                             exit(-1);
                         }
                         // create a symbol to save the name
@@ -322,6 +333,21 @@ int end_statement (end_t * end)
                         end_symbol_destroy(symbol);
                         return 0;
                     }
+                    // maybe it's a function we are calling
+                    else
+                    {
+                        symbol = end_vm_symbol_get (end->vm, end->token->text);
+                        if (symbol->type == TYPE_FUNCTION)
+                        {
+                            #ifdef END_DEBUG
+                                printf("end_statement FUNCTION %s\n", symbol->name);
+                            #endif
+                            // call the function
+                            end_function_call(end, symbol);
+                            end_execute(end);
+                            continue;
+                        }
+                    }
                     break;
                     
                 case TOKEN_PRINT :
@@ -330,6 +356,9 @@ int end_statement (end_t * end)
                     #endif
                     end->token = end->token->next;
                     symbol = end_evaluate(end);
+                    #ifdef END_DEBUG
+                        printf("PRINT: ");
+                    #endif
                     switch (symbol->type)
                     {
                         case TYPE_NUMBER :
@@ -341,6 +370,7 @@ int end_statement (end_t * end)
                     }
                     end_symbol_destroy(symbol);
                     return 0;
+                    
             }
         }
         switch (end->token->type)
@@ -355,20 +385,69 @@ int end_statement (end_t * end)
                 else if (end_evaluate_conditional(end) == 0)
                     end->conditional_noop = 1;
                 break;
-                
+            
+            case TOKEN_KEYWORD_FUNCTION :
+                symbol = end_function_create(end);
+                end_vm_symbol_set(end->vm, symbol);
+                // push on to the control stack so when we pop, no segfault :)
+                end_vm_control_stack_push(end->vm, NULL);
+                end->conditional_noop++;
+                break;
+            
+            case TOKEN_KEYWORD_RETURN :
+                if (end->conditional_noop)
+                {
+                    end->conditional_noop--;
+                    // if this return has a result it returns, we
+                    // need to skip all the way to TOKEN_TERMINATOR
+                    if (end->conditional_noop == 0)
+                    {
+                        while ((end->token->type != TOKEN_TERMINATOR)
+                               && (end->token->type != TOKEN_EOF))
+                            end->token = end->token->next;
+                        continue;
+                    }
+                }
+                else
+                {
+                    control_stack_top = end_vm_control_stack_get(end->vm);
+                    // this better be a function at the top of the control stack
+                    if (control_stack_top->type != TOKEN_KEYWORD_FUNCTION)
+                    {
+                        fprintf(stderr,
+                                "return not matched with function line %d\n",
+                                end->token->line);
+                        exit(-1);
+                    }
+                    end_function_return(end);
+                    end_vm_control_stack_pop(end->vm);
+                    // break out of the end_execute statement, which will
+                    // return control to the end_evaluate statement where
+                    // the function_call took place
+                    return 1;
+                }
+                break;
             case TOKEN_KEYWORD_END :
                 if (end->conditional_noop)
+                {
+                    #if END_DEBUG
+                        printf("end->conditional_noop-- %d\n", end->conditional_noop);
+                    #endif
                     end->conditional_noop--;
+                }
                 else
                 {
                     // look at the top of the control stack. is it a while loop?
                     control_stack_top = end_vm_control_stack_get(end->vm);
-                    if (control_stack_top->type == TOKEN_KEYWORD_WHILE)
+                    if (control_stack_top != NULL)
                     {
-                        // reset execution to the beginning of the while loop
-                        end->token = control_stack_top;
-                        end_vm_control_stack_pop(end->vm);
-                        continue; // don't let interpeter skip over loop token
+                        if (control_stack_top->type == TOKEN_KEYWORD_WHILE)
+                        {
+                            // reset execution to the beginning of the while loop
+                            end->token = control_stack_top;
+                            end_vm_control_stack_pop(end->vm);
+                            continue; // don't let interpeter skip over loop token
+                        }
                     }
                 }
                 end_vm_control_stack_pop(end->vm);
@@ -389,7 +468,31 @@ int end_statement (end_t * end)
     return 0;
 
 }
+
+
+
+int end_execute (end_t * end)
+{
+
+
+    while (end->token->type != TOKEN_EOF)
+    {
+        if (end_statement(end))
+        {
+            if (end->token->type == TOKEN_TERMINATOR)
+                end->token = end->token->next;
+            break;
+        }
+        #ifdef END_DEBUG
+            printf("statement execution complete\n");
+        #endif
+        if (end->token->type == TOKEN_TERMINATOR)
+            end->token = end->token->next;
+    }
+        
+    return 0;
     
+}
 
 
 int end_parse (end_t * end, char * text)
@@ -412,15 +515,8 @@ int end_parse (end_t * end, char * text)
 
     // now set token to beginning
     end->token = end->lexer->tokens;
-    while (end->token->type != TOKEN_EOF)
-    {
-        end_statement(end);
-        #ifdef END_DEBUG
-            printf("statement execution complete\n");
-        #endif
-        if (end->token->type == TOKEN_TERMINATOR)
-            end->token = end->token->next;
-    }
+
+    end_execute(end);
     
     return 0;
 

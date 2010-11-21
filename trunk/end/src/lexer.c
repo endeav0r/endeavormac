@@ -104,7 +104,6 @@ end_token_t * end_lexer_string (end_lexer_t * lexer)
 					case 'n' :
 						buf[buf_i++] = '\n';
 						lexer->current_char++;
-						lexer->line++;
 						continue;
 					case 't' :
 						buf[buf_i++] = '\t';
@@ -146,6 +145,8 @@ int end_lexer_text_classify (char * text)
 	int i;
 	int is_number;
 
+    if (strcmp(text, "\n") == 0)
+        return TOKEN_TERMINATOR;
 	if (strcmp(text, "=") == 0)
 		return TOKEN_ASSIGN;
 	if (strcmp(text, "+") == 0)
@@ -168,6 +169,8 @@ int end_lexer_text_classify (char * text)
         return TOKEN_MULTIPLY;
     if (strcmp(text, "/") == 0)
         return TOKEN_DIVIDE;
+    if (strcmp(text, ",") == 0)
+        return TOKEN_COMMA;
 	if (strcmp(text, "function") == 0)
 		return TOKEN_KEYWORD_FUNCTION;
 	if (strcmp(text, "end") == 0)
@@ -182,6 +185,8 @@ int end_lexer_text_classify (char * text)
         return TOKEN_KEYWORD_WHILE;
 	if (strcmp(text, "print") == 0)
 		return TOKEN_PRINT;
+    if (strcmp(text, "return") == 0)
+        return TOKEN_KEYWORD_RETURN;
 	
 	is_number = 1;
 	for (i = 0; i < strlen(text); i++)
@@ -240,10 +245,13 @@ end_token_t * end_lexer_next (end_lexer_t * lexer)
 		c = *(lexer->current_char++);
 		switch (c)
 		{
+            // these are 1 character tokens
 			case '\n' :
+            case '(' :
+            case ')' :
 				if (buf_i > 0)
 				{
-					// this will go back a char, making sure hit this terminator
+					// this will go back a char, making sure to hit this char
 					// next time end_lexer_next is called
 					lexer->current_char--;
 					buf[buf_i] = 0;
@@ -256,8 +264,11 @@ end_token_t * end_lexer_next (end_lexer_t * lexer)
 				}
 				else
 				{
-                    lexer->line++;
-					token = end_token_create(NULL, TOKEN_TERMINATOR, lexer->line);
+                    if (c == '\n')  
+                        lexer->line++;
+                    buf[0] = c;
+                    buf[1] = 0;
+					token = end_token_create(buf, end_lexer_text_classify(buf), lexer->line);
 					end_lexer_append_token(lexer, token);
 					#ifdef LEXER_DEBUG
 						printf("end_lexer_next %d %s\n", token->type, token->text);
