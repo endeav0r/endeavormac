@@ -40,6 +40,7 @@ typedef struct end_vm_control_stack_s
 {
     int autopop;
     end_token_t * token; // token that started this control block
+    end_token_t * retraddr; // return address for functions
     struct end_vm_control_stack_s * next;
 } end_vm_control_stack_t;
 
@@ -63,6 +64,7 @@ end_symbol_t * end_vm_symbol_get (end_vm_t * vm, char * name);
 int            end_vm_symbol_table_stack_pop  (end_vm_t * vm);
 int            end_vm_symbol_table_stack_push (end_vm_t * vm);
 int            end_vm_symbol_set (end_vm_t * vm, end_symbol_t * symbol);
+int            end_vm_symbol_set_local (end_vm_t * vm, end_symbol_t * symbol);
 
 void end_vm_symbol_table_stack_destroy (end_vm_symbol_table_stack_t * stack);
 
@@ -72,8 +74,10 @@ end_vm_symbol_stack_t * end_vm_stack_pop            (end_vm_t * vm);
 void                    end_vm_symbol_stack_destroy (end_vm_symbol_stack_t * stack);
 
 int           end_vm_control_stack_push (end_vm_t * vm, end_token_t * token);
+int           end_vm_control_stack_set_retraddr (end_vm_t * vm, end_token_t * token);
 int           end_vm_control_stack_set_autopop (end_vm_t * vm, int autopop);
 end_token_t * end_vm_control_stack_get (end_vm_t * vm);
+end_token_t * end_vm_control_stack_get_retraddr (end_vm_t * vm);
 void          end_vm_control_stack_pop (end_vm_t * vm);
 
 #endif

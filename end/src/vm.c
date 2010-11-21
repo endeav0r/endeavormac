@@ -155,6 +155,16 @@ int end_vm_symbol_set (end_vm_t * vm, end_symbol_t * symbol)
 	
 	return 0;
 }
+
+
+
+int end_vm_symbol_set_local (end_vm_t * vm, end_symbol_t * symbol)
+{
+
+	end_symbol_table_assign(vm->symbol_table_stack->symbols, symbol);
+	
+	return 0;
+}
 		
 
 
@@ -170,6 +180,9 @@ int end_vm_stack_push (end_vm_t * vm, end_symbol_t * symbol, int free)
 
 	end_vm_symbol_stack_t * new;
 	
+    #ifdef VM_DEBUG
+        printf("vm_stack_push %d\n", free);
+    #endif
 	new = malloc(sizeof(end_vm_symbol_stack_t));
 	new->symbol = symbol;
 	new->free = free;
@@ -195,6 +208,9 @@ end_vm_symbol_stack_t * end_vm_stack_pop (end_vm_t * vm)
 {
 	end_vm_symbol_stack_t * stack;
 	
+    #ifdef VM_DEBUG
+        printf("vm_stack_pop\n");
+    #endif
 	if (vm->symbol_stack != NULL)
 	{
 		stack = vm->symbol_stack;
@@ -253,9 +269,24 @@ int end_vm_control_stack_set_autopop (end_vm_t * vm, int autopop)
 
 
 
+int end_vm_control_stack_set_retraddr (end_vm_t * vm, end_token_t * token)
+{
+    vm->control_stack->retraddr = token;
+    return 0;
+}
+
+
+
 end_token_t * end_vm_control_stack_get (end_vm_t * vm)
 {
     return vm->control_stack->token;
+}
+
+
+
+end_token_t * end_vm_control_stack_get_retraddr (end_vm_t * vm)
+{
+    return vm->control_stack->retraddr;
 }
 
 

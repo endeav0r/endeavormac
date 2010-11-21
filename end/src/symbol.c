@@ -245,6 +245,8 @@ end_symbol_t * end_symbol_create (char * name, char * text_value, int type)
         case TYPE_STRING :
             symbol->value = end_string_create(text_value);
             break;
+        case TYPE_FUNCTION :
+            symbol->value = NULL;
 		case TYPE_NONE :
 			symbol->value = NULL;
 			break;
@@ -278,6 +280,8 @@ end_symbol_t * end_symbol_copy (end_symbol_t * symbol)
         case TYPE_STRING :
             copy->value = end_string_create(end_string_get(symbol->value));
             break;
+        case TYPE_FUNCTION :
+            copy->value = end_function_copy(symbol->value);
 		case TYPE_NONE :
 			copy->value = NULL;
 			break;
