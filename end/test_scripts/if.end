@@ -1,0 +1,39 @@
+a = 4
+b = 5
+if a == b
+    print "a is equal to b"
+else
+    print "a is not equal to b"
+end
+a = a + 1
+if a == b
+    print "ok, now a is equal to b"
+    if "one" == "two"
+        print "and one equals two"
+    end
+    if "one" == "one"
+        print "and one equals one"
+    end
+end
+
+if 1 == 2
+    if 1 == 1
+        print "fail1"
+    else
+        print "fail2"
+    end
+else
+    if 2 == 2
+        print "success1"
+    else
+        print "fail3"
+    end
+end
+
+if 1 == 2
+    print "fail4"
+else if 2 == 2
+    print "success2"
+end
+
+print "success3"

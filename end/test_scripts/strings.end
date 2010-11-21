@@ -1,0 +1,4 @@
+test_string = "this is a test string"
+print test_string
+test_string = test_string + ". indeed yes it is"
+print test_string
