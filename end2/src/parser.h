@@ -6,6 +6,7 @@
 #include "variable.h"
 
 typedef struct parser_s {
+    int parens;
     token_t * token;
     vm_t * vm;
 } parser_t;
