@@ -43,17 +43,32 @@ void vm_assign (vm_t * vm) {
 }
 
 
-int vm_execute (vm_t * vm) {
+token_t * vm_execute (vm_t * vm) {
     int opcode;
     variable_t * a, * b;
+    token_t * jmp_token = NULL;
     
     while ((opcode = vm_opcodes_pop(vm)) != OPCODE_NONE) {
+        //printf("OPCODE %d\n", opcode);
         switch (opcode) {
         
             case OPCODE_ADD :
+            case OPCODE_SUBTRACT :
+            case OPCODE_MULTIPLY :
+            case OPCODE_DIVIDE :
+            case OPCODE_MODULUS :
                 a = vm_stack_pop(vm);
                 b = vm_stack_pop(vm);
-                variable_add(a, b);
+                if (opcode == OPCODE_ADD)
+                    variable_add(a, b);
+                if (opcode == OPCODE_SUBTRACT)
+                    variable_subtract(a, b);
+                if (opcode == OPCODE_MULTIPLY)
+                    variable_multiply(a, b);
+                if (opcode == OPCODE_DIVIDE)
+                    variable_divide(a, b);
+                if (opcode == OPCODE_MODULUS)
+                    variable_modulus(a, b);
                 vm_stack_push(vm, a);
                 variable_destroy(b);
                 break;
@@ -65,39 +80,63 @@ int vm_execute (vm_t * vm) {
                 variable_destroy(a);
                 variable_destroy(b);
                 break;
+                
+            case OPCODE_EQ :
+            case OPCODE_LT :
+            case OPCODE_GT :
+                a = vm_stack_pop(vm);
+                b = vm_stack_pop(vm);
+                if ((opcode == OPCODE_EQ) && (variable_compare(a, b) != 0))
+                    jmp_token = vm_stack_pop(vm);
+                else if ((opcode == OPCODE_LT) && (variable_compare(a, b) <= 0))
+                    jmp_token = vm_stack_pop(vm);
+                else if ((opcode == OPCODE_GT) && (variable_compare(a, b) >= 0))
+                    jmp_token = vm_stack_pop(vm);
+                else
+                    vm_stack_pop(vm);
+                variable_destroy(a);
+                variable_destroy(b);
+                break;
+                
+            case OPCODE_JMP :
+                jmp_token = vm_stack_pop(vm);
+                break;
             
             case OPCODE_ASSIGN :
                 vm_assign(vm);
                 break;
-                
         }
+            
     }
-    return 0;
+    return jmp_token;
 }
 
 
 
-void vm_stack_push (vm_t * vm, variable_t * variable) {
+void vm_stack_push (vm_t * vm, void * variable) {
 	stack_t * stack;
-	
-	stack = (stack_t *) malloc(sizeof(stack_t));
-	stack->variable = variable;
-	stack->next = vm->stack;
-	vm->stack = stack;
+    //printf("STACK PUSH\n");
+    stack = (stack_t *) malloc(sizeof(stack_t));
+    stack->data = variable;
+    stack->next = vm->stack;
+    vm->stack = stack;
+    
+
 }
 
 
-variable_t * vm_stack_pop (vm_t * vm) {
+void * vm_stack_pop (vm_t * vm) {
 	stack_t * stack;
-	variable_t * variable;
+	void * data;
+	//printf("STACK POP\n");
 	
 	stack = vm->stack;
 	vm->stack = vm->stack->next;
 	
-	variable = stack->variable;
+	data = stack->data;
 	free(stack);
-	
-	return variable;
+
+	return data;
 }
 
 

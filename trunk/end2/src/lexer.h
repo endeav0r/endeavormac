@@ -29,6 +29,7 @@
 #define TOKEN_KEYWORD_ELSIF 104
 #define TOKEN_KEYWORD_WHILE 105
 #define TOKEN_KEYWORD_RETURN 106
+#define TOKEN_KEYWORD_LOOP 107
 #define TOKEN_EOF 1000
 
 // for now, PRINT is its own token
@@ -41,6 +42,7 @@ typedef struct token_s {
 	int    type;
     int    line; // the line this token was found on
 	struct token_s * next;
+    struct token_s * previous;
 } token_t;
 
 

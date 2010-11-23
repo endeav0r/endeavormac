@@ -89,7 +89,91 @@ void variable_assign (variable_t * a, variable_t * b) {
 
 
 void variable_add (variable_t * a, variable_t * b) {
-    a->number += b->number;
+    if (a->type != b->type) {
+        fprintf(stderr, "add between different types\n");
+        exit(1);
+    }
+    
+    switch (a->type) {
+        case TYPE_NUMBER :
+            a->number += b->number;
+            break;
+        case TYPE_STRING :
+            a->string = realloc(a->string, strlen(a->string) + strlen(b->string) + 1);
+            strcat(a->string, b->string);
+            break;
+        default :
+            fprintf(stderr, "add on incompatible type\n");
+            exit(1);
+    }
+}
+
+
+void variable_subtract (variable_t * a, variable_t * b) {
+    if (a->type != b->type) {
+        fprintf(stderr, "subtract between different types\n");
+        exit(1);
+    }
+    
+    switch (a->type) {
+        case TYPE_NUMBER :
+            a->number -= b->number;
+            break;
+        default :
+            fprintf(stderr, "add on incompatible type\n");
+            exit(1);
+    }
+}
+
+
+void variable_multiply (variable_t * a, variable_t * b) {
+    if (a->type != b->type) {
+        fprintf(stderr, "subtract between different types\n");
+        exit(1);
+    }
+    
+    switch (a->type) {
+        case TYPE_NUMBER :
+            a->number *= b->number;
+            break;
+        default :
+            fprintf(stderr, "add on incompatible type\n");
+            exit(1);
+    }
+}
+
+
+void variable_modulus (variable_t * a, variable_t * b) {
+    if (a->type != b->type) {
+        fprintf(stderr, "subtract between different types\n");
+        exit(1);
+    }
+    
+    switch (a->type) {
+        case TYPE_NUMBER :
+            a->number %= b->number;
+            break;
+        default :
+            fprintf(stderr, "add on incompatible type\n");
+            exit(1);
+    }
+}
+
+
+void variable_divide (variable_t * a, variable_t * b) {
+    if (a->type != b->type) {
+        fprintf(stderr, "subtract between different types\n");
+        exit(1);
+    }
+    
+    switch (a->type) {
+        case TYPE_NUMBER :
+            a->number /= b->number;
+            break;
+        default :
+            fprintf(stderr, "add on incompatible type\n");
+            exit(1);
+    }
 }
 
 
@@ -98,6 +182,28 @@ variable_t * variable_dereference (variable_t * variable) {
         return variable;
     return variable->pointer;
 }
+
+
+int variable_compare (variable_t * a, variable_t * b) {
+    if (a->type != b->type) {
+        fprintf(stderr, "comparison between incompatible types\n");
+        exit(1);
+    }
+    
+    switch (a->type) {
+        case TYPE_NUMBER :
+            return a->number - b->number;
+        case TYPE_POINTER :
+            return a->pointer - b->pointer;
+        case TYPE_STRING :
+            return strcmp(a->string, b->string);
+        case TYPE_NONE :
+            return 0;
+    }
+    
+    exit(9000);
+}
+    
 
 
 variable_t * variable_cast_string (variable_t * castee) {
