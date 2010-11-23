@@ -49,6 +49,7 @@ token_t * token_create (char * text, int type, int line) {
     token->type = type;
     token->line = line;
     token->next = NULL;
+    token->previous = NULL;
     
     return token;
 }
@@ -160,6 +161,8 @@ int lexer_text_classify (char * text) {
         return TOKEN_KEYWORD_ELSIF;
     if (strcmp(text, "while") == 0)
         return TOKEN_KEYWORD_WHILE;
+    if (strcmp(text, "loop") == 0)
+        return TOKEN_KEYWORD_LOOP;
     if (strcmp(text, "print") == 0)
         return TOKEN_PRINT;
     if (strcmp(text, "return") == 0)
@@ -181,7 +184,7 @@ int lexer_text_classify (char * text) {
 
 
 // doesn't copy token, so don't free it after this!
-void lexer_apptoken (lexer_t * lexer, token_t * token)
+void lexer_append_token (lexer_t * lexer, token_t * token)
 {
     if (lexer->tokens == NULL) {
         lexer->tokens = token;
@@ -189,6 +192,7 @@ void lexer_apptoken (lexer_t * lexer, token_t * token)
     }
     else {
         lexer->tokens_last->next = token;
+        token->previous = lexer->tokens_last;
         lexer->tokens_last = lexer->tokens_last->next;
     }
 }
@@ -221,7 +225,7 @@ token_t * lexer_next (lexer_t * lexer)
                     lexer->current_char--;
                     buf[buf_i] = 0;
                     token = token_create(buf, lexer_text_classify(buf), lexer->line);
-                    lexer_apptoken(lexer, token);
+                    lexer_append_token(lexer, token);
                     return token;
                 }
                 else {
@@ -230,7 +234,7 @@ token_t * lexer_next (lexer_t * lexer)
                     buf[0] = c;
                     buf[1] = 0;
                     token = token_create(buf, lexer_text_classify(buf), lexer->line);
-                    lexer_apptoken(lexer, token);
+                    lexer_append_token(lexer, token);
                     return token;
                 }
                 break; // never reached
@@ -240,12 +244,12 @@ token_t * lexer_next (lexer_t * lexer)
                 if (buf_i > 0) {
                     buf[buf_i] = 0;
                     token = token_create(buf, lexer_text_classify(buf), lexer->line);
-                    lexer_apptoken(lexer, token);
+                    lexer_append_token(lexer, token);
                     return token;
                 }
                 break;
             case '"' :
-                lexer_apptoken(lexer, lexer_string(lexer));
+                lexer_append_token(lexer, lexer_string(lexer));
                 return lexer->tokens_last;
             default :
                 buf[buf_i++] = c;
@@ -255,7 +259,7 @@ token_t * lexer_next (lexer_t * lexer)
     if (buf_i > 0) {
         buf[buf_i] = 0;
         token = token_create(buf, lexer_text_classify(buf), lexer->line);
-        lexer_apptoken(lexer, token);
+        lexer_append_token(lexer, token);
         return token;
     }
     if (lexer->tokens_last != NULL) {
@@ -264,7 +268,7 @@ token_t * lexer_next (lexer_t * lexer)
     }
     
     token = token_create(NULL, TOKEN_EOF, lexer->line);
-    lexer_apptoken(lexer, token);
+    lexer_append_token(lexer, token);
     
     return token;
 }
