@@ -48,7 +48,7 @@ token_t * vm_execute (vm_t * vm) {
     variable_t * a, * b;
     token_t * jmp_token = NULL;
     
-    while ((opcode = vm_opcodes_pop(vm)) != OPCODE_NONE) {
+    while ((opcode = vm_opcodes_pop(vm)) != OPCODE_HALT) {
         //printf("OPCODE %d\n", opcode);
         switch (opcode) {
         
@@ -155,7 +155,7 @@ int vm_opcodes_pop (vm_t * vm) {
 	opcodes_t * opcodes;
 	
     if (vm->frame->opcodes == NULL)
-        return OPCODE_NONE;
+        return OPCODE_HALT;
     
 	opcodes = vm->frame->opcodes;
 	vm->frame->opcodes = vm->frame->opcodes->next;

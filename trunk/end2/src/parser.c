@@ -6,6 +6,7 @@ parser_t * parser_create (token_t * token) {
     
     parser = (parser_t *) malloc(sizeof(parser_t));
     parser->token = token;
+    parser->parens = 0;
     parser->vm = vm_create();
     
     return parser;
@@ -72,7 +73,7 @@ token_t * find_loop_begin (token_t * token) {
 
 int parser_parse (parser_t * parser) {
     symbol_t * symbol;
-    token_t * token_jmp;
+    token_t * token_jmp = NULL;
     while (1) {
         switch (parser->token->type) {
             case TOKEN_SYMBOL :
@@ -93,6 +94,16 @@ int parser_parse (parser_t * parser) {
                 
             case TOKEN_STRING :
                 vm_stack_push(parser->vm, variable_create(parser->token->text, TYPE_STRING));
+                break;
+                
+            case TOKEN_PAREN_OPEN :
+                parser->parens++;
+                vm_opcodes_push(parser->vm, OPCODE_HALT);
+                break;
+            
+            case TOKEN_PAREN_CLOSE :
+                parser->parens--;
+                token_jmp = vm_execute(parser->vm);
                 break;
                 
             case TOKEN_ADD :
@@ -134,14 +145,17 @@ int parser_parse (parser_t * parser) {
                 break;
                 
             case TOKEN_EQUAL :
+                token_jmp = vm_execute(parser->vm);
                 vm_opcodes_push(parser->vm, OPCODE_EQ);
                 break;
                 
             case TOKEN_LESS_THAN :
+                token_jmp = vm_execute(parser->vm);
                 vm_opcodes_push(parser->vm, OPCODE_LT);
                 break;
             
             case TOKEN_GREATER_THAN :
+                token_jmp = vm_execute(parser->vm);
                 vm_opcodes_push(parser->vm, OPCODE_GT);
                 break;
                 
@@ -156,14 +170,14 @@ int parser_parse (parser_t * parser) {
             case TOKEN_TERMINATOR :
             case TOKEN_EOF :
                 token_jmp = vm_execute(parser->vm);
-                if (token_jmp != NULL) {
-                    parser->token = token_jmp;
-                }
                 break;
         }
-        if (parser->token->type == TOKEN_EOF)
+         if (token_jmp != NULL)
+            parser->token = token_jmp;
+        else if (parser->token->type == TOKEN_EOF)
             break;
-        parser->token = parser->token->next;
+        else
+            parser->token = parser->token->next;
     }
     return 0;
 }

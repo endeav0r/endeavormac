@@ -10,7 +10,7 @@ typedef struct symbol_s symbol_t;
 #include "lexer.h"
 #include "variable.h"
 
-#define OPCODE_NONE     0
+#define OPCODE_HALT     0
 #define OPCODE_ADD      1
 #define OPCODE_SUBTRACT 2
 #define OPCODE_MULTIPLY 3
