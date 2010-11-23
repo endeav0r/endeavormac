@@ -6,6 +6,7 @@ vm_t * vm_create () {
     
     vm = (vm_t *) malloc(sizeof(vm_t));
     vm->frame = NULL;
+    vm->stack = NULL;
     vm_frame_push(vm);
     
     return vm;
@@ -14,6 +15,9 @@ vm_t * vm_create () {
 
 void vm_destroy (vm_t * vm) {
     vm_frame_pop(vm);
+    
+    if (vm->stack != NULL)
+        fprintf(stderr, "destroying vm with non-null stack\n");
     if (vm->frame != NULL)
         fprintf(stderr, "destroying vm with non null frame\n");
     free(vm);
@@ -78,8 +82,8 @@ void vm_stack_push (vm_t * vm, variable_t * variable) {
 	
 	stack = (stack_t *) malloc(sizeof(stack_t));
 	stack->variable = variable;
-	stack->next = vm->frame->stack;
-	vm->frame->stack = stack;
+	stack->next = vm->stack;
+	vm->stack = stack;
 }
 
 
@@ -87,8 +91,8 @@ variable_t * vm_stack_pop (vm_t * vm) {
 	stack_t * stack;
 	variable_t * variable;
 	
-	stack = vm->frame->stack;
-	vm->frame->stack = vm->frame->stack->next;
+	stack = vm->stack;
+	vm->stack = vm->stack->next;
 	
 	variable = stack->variable;
 	free(stack);
@@ -209,7 +213,6 @@ void vm_frame_push (vm_t * vm) {
     frame_t * frame;
     
     frame = (frame_t * ) malloc(sizeof(frame_t));
-    frame->stack = NULL;
     frame->opcodes = NULL;
     frame->symbols = NULL;
     frame->next = vm->frame;
@@ -223,16 +226,6 @@ void vm_frame_pop (vm_t * vm) {
     frame = vm->frame;
     vm->frame = vm->frame->next;
     
-    // the top of the stack is an item to be "returned" to the lower level
-    if (frame->stack != NULL)
-    {
-        frame->stack->next = vm->frame->stack;
-        vm->frame->stack = frame->stack;
-        frame->stack = frame->stack->next;
-    }
-    
-    if (frame->stack != NULL)
-        fprintf(stderr, "destroying frame with non-null stack\n");
     if (frame->opcodes != NULL)
         fprintf(stderr, "destroying frame with non-null opcodes\n");
     

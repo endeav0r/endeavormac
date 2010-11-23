@@ -37,7 +37,6 @@ struct symbol_s {
 
 
 typedef struct frame_s {
-    stack_t * stack;
     opcodes_t * opcodes;
     symbol_t * symbols;
     struct frame_s * next;
@@ -45,6 +44,7 @@ typedef struct frame_s {
 
 
 typedef struct vm_s {
+    stack_t * stack;
 	frame_t * frame;
 } vm_t;
 
