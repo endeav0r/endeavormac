@@ -193,7 +193,7 @@ void lexer_append_token (lexer_t * lexer, token_t * token)
     else {
         lexer->tokens_last->next = token;
         token->previous = lexer->tokens_last;
-        lexer->tokens_last = lexer->tokens_last->next;
+        lexer->tokens_last = token;
     }
 }
 
