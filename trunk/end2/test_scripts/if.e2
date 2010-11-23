@@ -1,0 +1,30 @@
+success = 0
+fail = 0
+if 1 == 2
+    print "FAIL1"
+    fail = fail + 1
+end
+
+if 1 == 1
+    print "SUCCESS"
+    success = success + 1
+end
+
+if 1 == 2
+    print "FAIL2"
+    fail = fail + 1
+else
+    if 2 == 3
+        print "FAIL 3"
+        fail = fail + 1
+    else
+        print "SUCCESS2"
+        success = success + 1
+    end
+end
+    
+if success == 2
+    print "TESTS PASS"
+else
+    print "TESTS FAIL"
+end
