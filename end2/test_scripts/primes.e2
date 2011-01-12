@@ -2,7 +2,7 @@ n = 2
 while n < 100
     i = 2
     prime = 1
-    while i * i < n
+    while i * i < n + 1
         if i % n == 0
             prime = 0
         end
