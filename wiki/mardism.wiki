@@ -4,6 +4,7 @@
 
 The MARC is used at the United States Military Academy. Instead of continually converting instructions to assembly by hand, wouldn't it be great if we all just had a disassembler?
 
+Source is available in svn. win32 binary available in downloads.
 
 = Basic Usage =
 mardism only accept instructions in binary. If you don't have a file full of binary instructions, you need to create one.
