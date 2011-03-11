@@ -22,8 +22,15 @@ class Parser {
         // we can peek several tokens down
         // (we're not creating no stinking state table)
         std::list <ParserStack> stack;
+        
         std::list <Token> tokens;
         std::list <Instruction> instructions;
+        
+        // when we have a code block { } preceeded by a conditional,
+        // we keep a pointer to the branch instruction that needs to
+        // point after the block. when the block closes, we can set the
+        // branch up right
+        std::stack <Instruction *> jmp_stack;
         
         SymbolTable table;
         
@@ -44,8 +51,9 @@ class Parser {
         void load_immediate (int reg, int imm);
         void mov            (int reg_dest, int reg_src);
         void addx           (int reg_dest, int reg_1, int reg_2);
-        
-        
+        void subx           (int reg_dest, int reg_1, int reg_2);
+        void bn             (int imm);
+        void ba             (int imm);
         
         void symbol_st (std::string name, int reg);
 		void symbol_ld (std::string name, int reg);

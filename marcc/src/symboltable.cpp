@@ -2,18 +2,18 @@
 
 
 Symbol :: Symbol (std::string name) {
-    this->name = name;
+    this->name     = name;
     this->absolute = true;
-    this->address = 0x00000000;
-    this->offset  = 0x00000000;
+    this->address  = 0x00000000;
+    this->offset   = 0x00000000;
 }
 
 
 Symbol :: Symbol () {
-    this->name = name;
+    this->name     = name;
     this->absolute = true;
-    this->address = 0x00000000;
-    this->offset  = 0x00000000;
+    this->address  = 0x00000000;
+    this->offset   = 0x00000000;
 }
 
 
@@ -24,16 +24,16 @@ int         Symbol :: g_address  () { return this->address;  }
 
 
 void Symbol :: s_name     (std::string name) { this->name = name; }
-void Symbol :: s_absolute (bool absolute)    { this->absolute = absolute; }
-void Symbol :: s_offset   (int offset)       { this->offset = offset; }
-void Symbol :: s_address  (int address)      { this->address = address; }
+void Symbol :: s_absolute (bool    absolute) { this->absolute = absolute; }
+void Symbol :: s_offset   (int       offset) { this->offset = offset; }
+void Symbol :: s_address  (int      address) { this->address = address; }
 
 
 Symbol& Symbol :: operator= (Symbol symbol) {
-    this->name = symbol.g_name();
+    this->name     = symbol.g_name();
     this->absolute = symbol.g_absolute();
-    this->address = symbol.g_address();
-    this->offset = symbol.g_offset();
+    this->address  = symbol.g_address();
+    this->offset   = symbol.g_offset();
     return *this;
 }
 
