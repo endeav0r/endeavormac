@@ -133,19 +133,22 @@ void Parser :: subx (int reg_dest, int reg_1, int reg_2) {
 
 void Parser :: bn (int imm) {
 	Instruction bn(OP_BN);
-	
 	bn.s_IMM(imm);
-	
 	this->instructions.push_back(bn);
 }
 
 
 void Parser :: ba (int imm) {
 	Instruction ba(OP_BA);
-	
 	ba.s_IMM(imm);
-	
 	this->instructions.push_back(ba);
+}
+
+
+void Parser :: bz (int imm) {
+	Instruction bz(OP_BZ);
+	bz.s_IMM(imm);
+	this->instructions.push_back(bz);
 }
 
 
@@ -275,7 +278,7 @@ void Parser :: reduce (Token next) {
 				if ((*stack_it).g_type() == PS_REGISTER) {
 					reg2 = (*stack_it).g_register();
 					this->subx(reg, reg, reg2);
-					this->bn(1);
+					this->bz(1);
 					this->ba(1);
 					this->jmp_stack.push(&(this->instructions.back()));
 					this->stack.pop_front();
@@ -324,7 +327,8 @@ void Parser :: reduce (Token next) {
 				if ((*stack_it).g_type() == PS_IF) {
 					// adjust ba from opening of this block
 					(*(this->jmp_stack.top())).s_IMM(this->instructions.size()
-					                              - constant);
+					                                 - constant
+													 - 2); // -2 accounts for ba/bn instructions
 				    this->jmp_stack.pop();
 				    this->stack.pop_front();
 				    this->stack.pop_front();
