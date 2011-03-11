@@ -15,6 +15,7 @@ void Instruction :: s_RD  (int RD)  { this->RD  = RD;  }
 void Instruction :: s_RS1 (int RS1) { this->RS1 = RS1; }
 void Instruction :: s_RS2 (int RS2) { this->RS2 = RS2; }
 void Instruction :: s_IMM (unsigned int IMM) { this->IMM = IMM; }
+void Instruction :: s_COMMENT (std::string comment) { this->comment = comment; }
 
 
 std::string Instruction :: assembly () {
@@ -76,6 +77,9 @@ std::string Instruction :: assembly () {
         case OP_CALL :
             out_string << "CALL  " << std::hex << this->IMM;
             return out_string.str();
+		case OP_COMMENT :
+			out_string << "; " << this->comment;
+			return out_string.str();
         default :
             throw Exception("Error creating assembly from instruction");
     }
