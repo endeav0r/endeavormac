@@ -103,10 +103,10 @@ void Parser :: set_symbol (std::string name, int value) {
         this->push_register(5);
         
         // r5 gets symbol offset
-        // r4 gets stack pointer + r4
+        // r4 gets base pointer + r4
         // r4 => the address of the symbol
         this->load_immediate(5, this->table.g_symbol_offset(name));
-        this->addx(4, 5, REG_STACK_POINTER);
+        this->addx(4, 5, REG_BASE_POINTER);
         
         // r5 gets the value
         std::cout << "setting 5 to " << value << "\n";
