@@ -26,7 +26,6 @@ ParserStack :: ParserStack (int type, std::string name) {
             break;
         case PS_NUMBER :
             this->constant = (unsigned int) atoi(name.c_str());
-            std::cout << "this->constant is " << this->constant << "\n";
             break;
     }
 }
