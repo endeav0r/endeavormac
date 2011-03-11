@@ -426,6 +426,7 @@ void Parser :: parse () {
     Token next;
     std::list <Token> :: iterator token_it;
     std::list <ParserStack> :: iterator stack_it;
+	Instruction hlt(OP_HLT);
     
     for (token_it  = this->tokens.begin();
          token_it != this->tokens.end();
@@ -488,6 +489,8 @@ void Parser :: parse () {
 		 }
 		 std::cout << "\n";
 	 }
+	 else
+		this->instructions.push_back(hlt);
     
 }
 
