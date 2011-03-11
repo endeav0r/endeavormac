@@ -234,7 +234,7 @@ void Parser :: reduce (Token next) {
 					this->stack.pop_front();
 					this->stack.pop_front();
 					this->stack.pop_front();
-					this->stack.push_front(ParserStack(PS_ADD, reg));
+					this->stack.push_front(ParserStack(PS_REGISTER, reg));
 					reduce = true;
 				}
 			}

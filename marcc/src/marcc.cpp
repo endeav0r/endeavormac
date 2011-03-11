@@ -14,6 +14,8 @@ int test_input (std::string input) {
     std::list <Instruction> :: iterator instruction_it;
 
     try {
+		
+		std::cout << "\nRUNNING TEST\n" << input << "\n";
     
         Lexer lexer(input);
         lexer.lex();
@@ -27,6 +29,7 @@ int test_input (std::string input) {
              instruction_it++) {
             std::cout << (*instruction_it).assembly() << "\n";
         }
+        std::cout << "\n";
     }
     catch (Exception e) {
         std::cout << e.g_description();
