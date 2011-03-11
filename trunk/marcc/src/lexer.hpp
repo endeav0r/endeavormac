@@ -3,6 +3,7 @@
 
 #include <list>
 #include <string>
+#include <sstream>
 
 #include "token.hpp"
 
@@ -17,6 +18,7 @@ class Lexer {
         
     public :
         Lexer (std::string text);
+        
         void lex ();
         
         std::list <Token> g_tokens();

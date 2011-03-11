@@ -32,7 +32,7 @@ int test_input (std::string input) {
         std::cout << "\n";
     }
     catch (Exception e) {
-        std::cout << e.g_description();
+        std::cout << e.g_description() << "\n";
         return -1;
     }
     
@@ -49,6 +49,8 @@ int main () {
         return -1;
     if (test_input("a = 1 + 2; b = 3 + 4; a = a + b;"))
         return -1;
+	if (test_input("if (1 == 1) { a = 2; }"))
+		return -1;
     
     return 0;
     

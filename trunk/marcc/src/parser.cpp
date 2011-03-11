@@ -120,6 +120,35 @@ void Parser :: addx (int reg_dest, int reg_1, int reg_2) {
 }
 
 
+void Parser :: subx (int reg_dest, int reg_1, int reg_2) {
+	Instruction sub(OP_SUBX);
+	
+	sub.s_RD(reg_dest);
+	sub.s_RS1(reg_1);
+	sub.s_RS2(reg_2);
+	
+	this->instructions.push_back(sub);
+}
+
+
+void Parser :: bn (int imm) {
+	Instruction bn(OP_BN);
+	
+	bn.s_IMM(imm);
+	
+	this->instructions.push_back(bn);
+}
+
+
+void Parser :: ba (int imm) {
+	Instruction ba(OP_BA);
+	
+	ba.s_IMM(imm);
+	
+	this->instructions.push_back(ba);
+}
+
+
 void Parser :: symbol_st (std::string name, int reg) {
 	Instruction comment(OP_COMMENT);
     Instruction st(OP_ST);
@@ -224,26 +253,93 @@ void Parser :: reduce (Token next) {
 					this->stack.push_front(ParserStack(PS_REGISTER, reg));
 					reduce = true;
 				}
-				// register := symbol add register
+				// register add register := symbol add register
 				else if ((*stack_it).g_type() == PS_SYMBOL) {
 					reg2 = this->get_free_register();
 					this->use_register(reg2);
 					this->symbol_ld((*stack_it).g_name(), reg2);
-					this->addx(reg, reg, reg2);
-					this->free_register(reg2);
 					this->stack.pop_front();
 					this->stack.pop_front();
 					this->stack.pop_front();
+					this->stack.push_front(ParserStack(PS_REGISTER, reg2));
+					this->stack.push_front(ParserStack(PS_ADD));
 					this->stack.push_front(ParserStack(PS_REGISTER, reg));
 					reduce = true;
+				}
+			}
+			// equals register [+]
+			else if (((*stack_it).g_type() == PS_EQUALS)
+			         && (next.g_type() != TOKEN_PLUS)) {
+				stack_it++;
+				// condition := register equals register [+]
+				if ((*stack_it).g_type() == PS_REGISTER) {
+					reg2 = (*stack_it).g_register();
+					this->subx(reg, reg, reg2);
+					this->bn(1);
+					this->ba(1);
+					this->jmp_stack.push(&(this->instructions.back()));
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.push_front(ParserStack(PS_CONDITION));
+					this->free_register(reg);
+					this->free_register(reg2);
+					reduce = true;
+				}
+				// register equals register := symbol equals register
+				else if ((*stack_it).g_register() == PS_SYMBOL) {
+					reg2 = this->get_free_register();
+					this->use_register(reg2);
+					this->symbol_ld((*stack_it).g_name(), reg2);
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.push_front(ParserStack(PS_REGISTER, reg2));
+					this->stack.push_front(ParserStack(PS_EQUALS));
+					this->stack.push_front(ParserStack(PS_REGISTER, reg));
+					reduce = true;
+				}
+			}
+		}
+		// block_close
+		else if ((*stack_it).g_type() == PS_BLOCK_CLOSE) {
+			stack_it++;
+			// block := block_open block_close
+			if ((*stack_it).g_type() == PS_BLOCK_OPEN) {
+				constant = (*stack_it).g_branch_address();
+				this->stack.pop_front();
+				this->stack.pop_front();
+				this->stack.push_front(ParserStack(PS_BLOCK, constant));
+				reduce = true;
+			}
+		}
+		//block
+		else if ((*stack_it).g_type() == PS_BLOCK) {
+			constant = (*stack_it).g_branch_address();
+			stack_it++;
+			// condition block
+			if ((*stack_it).g_type() == PS_CONDITION) {
+				// if condition block
+				stack_it++;
+				if ((*stack_it).g_type() == PS_IF) {
+					// adjust ba from opening of this block
+					(*(this->jmp_stack.top())).s_IMM(this->instructions.size()
+					                              - constant);
+				    this->jmp_stack.pop();
+				    this->stack.pop_front();
+				    this->stack.pop_front();
+				    this->stack.pop_front();
+				    reduce = true;
 				}
 			}
 		}
 		// symbol 
 		else if ((*stack_it).g_type() == PS_SYMBOL) {
 			stack_it++;
-			// add register := add symbol
-			if ((*stack_it).g_type() == PS_ADD) {
+			// add    register := add    symbol
+			// equals register := equals symbol
+			if (((*stack_it).g_type() == PS_ADD)
+			    || (*stack_it).g_type() == PS_EQUALS) {
 				stack_it--;
 				reg = this->get_free_register();
 				this->use_register(reg);
@@ -251,6 +347,46 @@ void Parser :: reduce (Token next) {
 				this->stack.pop_front();
 				this->stack.push_front(ParserStack(PS_REGISTER, reg));
 				reduce = true;
+			}
+		}
+		// assign
+		if ((*stack_it).g_type() == PS_ASSIGN) {
+			stack_it++;
+			// equals := assign assign
+			if ((*stack_it).g_type() == PS_ASSIGN) {
+				this->stack.pop_front();
+				this->stack.pop_front();
+				this->stack.push_front(ParserStack(PS_EQUALS));
+				reduce = true;
+			}
+		}
+		// paren_close
+		else if ((*stack_it).g_type() == PS_PAREN_CLOSE) {
+			stack_it++;
+			// register paren_close
+			if ((*stack_it).g_type() == PS_REGISTER) {
+				reg = (*stack_it).g_register();
+				stack_it++;
+				// register := paren_open register paren_close
+				if ((*stack_it).g_type() == PS_PAREN_OPEN) {
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.push_front(ParserStack(PS_REGISTER, reg));
+					reduce = true;
+				}
+			}
+			// condition paren_close
+			else if ((*stack_it).g_type() == PS_CONDITION) {
+				stack_it++;
+				// condition := paren_open condition paren_close
+				if ((*stack_it).g_type() == PS_PAREN_OPEN) {
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.push_front(ParserStack(PS_CONDITION));
+					reduce = true;
+				}
 			}
 		}
         // terminator
@@ -291,7 +427,6 @@ void Parser :: parse () {
          token_it != this->tokens.end();
          token_it++) {
         
-        // all tokens are immediately shifted
         switch ((*token_it).g_type()) {
             case TOKEN_SYMBOL :
                 // if this symbol doesn't exist, create it and zero it
@@ -314,6 +449,23 @@ void Parser :: parse () {
 			case TOKEN_PLUS :
 				this->stack.push_front(ParserStack(PS_ADD));
 				break;
+			case TOKEN_BLOCK_OPEN :
+				this->stack.push_front(ParserStack(PS_BLOCK_OPEN, (int) this->instructions.size()));
+				break;
+			case TOKEN_BLOCK_CLOSE :
+				this->stack.push_front(ParserStack(PS_BLOCK_CLOSE));
+				break;
+			case TOKEN_PAREN_OPEN :
+				this->stack.push_front(ParserStack(PS_PAREN_OPEN));
+				break;
+			case TOKEN_PAREN_CLOSE :
+				this->stack.push_front(ParserStack(PS_PAREN_CLOSE));
+				break;
+			case TOKEN_IF :
+				this->stack.push_front(ParserStack(PS_IF));
+				break;
+			default :
+				throw Exception(std::string("Unknown token ") + (*token_it).g_text());
         }
         
         // grab the next token

@@ -21,6 +21,12 @@ bool Lexer :: is_special (char c) {
         case '-' :
         case ';' :
         case '=' :
+        case '{' :
+        case '}' :
+        case '[' :
+        case ']' :
+        case '(' :
+        case ')' :
             return true;
         default :
             return false;
@@ -39,14 +45,16 @@ void Lexer :: lex () {
     std::list <Token> :: iterator token_it;
     
     for (text_it = this->text.begin(); text_it != this->text.end(); text_it++) {
-        if ((this->is_whitespace(*text_it)) && (buf.size() > 0)) {
-            this->tokens.push_back(Token(buf));
+        if (this->is_whitespace(*text_it)) {
+			if (buf.size() > 0)
+				this->tokens.push_back(Token(buf));
             buf = "";
         }
         else if (this->is_special(*text_it)) {
             if (buf.size() > 0)
                 this->tokens.push_back(Token(buf));
-            buf = *text_it;
+            this->tokens.push_back(Token(std::string("") + *text_it));
+            buf = "";
         }
         else {
             buf += *text_it;
