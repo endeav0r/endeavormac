@@ -33,10 +33,10 @@ ParserStack :: ParserStack (int type, std::string name) {
 
 
 void ParserStack :: s_constant (unsigned int constant) { this->constant = constant; }
-void ParserStack :: s_reg      (int reg)               { this->reg = reg; }
+void ParserStack :: s_register (int reg)               { this->reg = reg; }
 void ParserStack :: s_name     (std::string name)      { this->name = name; }
 
 int          ParserStack :: g_type     () { return this->type;     }
 unsigned int ParserStack :: g_constant () { return this->constant; }
-int          ParserStack :: g_reg      () { return this->reg;      }
+int          ParserStack :: g_register () { return this->reg;      }
 std::string  ParserStack :: g_name     () { return this->name;     }

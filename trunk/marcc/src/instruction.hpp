@@ -26,6 +26,7 @@
 #define OP_BZ    17
 #define OP_SETHI 18
 #define OP_CALL  19
+#define OP_COMMENT 100
 
 #define OPCODE_NOP   0x0A
 #define OPCODE_SUBX  0x09
@@ -58,6 +59,7 @@ class Instruction {
         int RD;
         int RS1;
         int RS2;
+        std::string comment;
         unsigned int IMM;
     
     public :
@@ -68,6 +70,7 @@ class Instruction {
         void s_RS1 (int RS1);
         void s_RS2 (int RS2);
         void s_IMM (unsigned int IMM);
+        void s_COMMENT (std::string comment);
         
         uint16_t machine_code();
         std::string assembly();
