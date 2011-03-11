@@ -49,7 +49,7 @@ int main () {
         return -1;
     if (test_input("a = 1 + 2; b = 3 + 4; a = a + b;"))
         return -1;
-	if (test_input("if (1 == 1) { a = 2; }"))
+	if (test_input("if (1 == 1) { a = 2; } a = a + 1;"))
 		return -1;
     
     return 0;

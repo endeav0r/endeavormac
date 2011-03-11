@@ -54,6 +54,7 @@ class Parser {
         void subx           (int reg_dest, int reg_1, int reg_2);
         void bn             (int imm);
         void ba             (int imm);
+        void bz             (int imm);
         
         void symbol_st (std::string name, int reg);
 		void symbol_ld (std::string name, int reg);
