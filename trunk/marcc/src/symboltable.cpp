@@ -39,10 +39,38 @@ Symbol& Symbol :: operator= (Symbol symbol) {
 
 
 SymbolTable :: SymbolTable () {
+    int i;
+    for (i = 0; i < GENERAL_PURPOSE_REGISTERS; i++)
+        this->registers_free[i] = true;
     this->previous = NULL;
     this->next = NULL;
     this->last = this;
     this->next_free_offset = 0;
+}
+
+
+int SymbolTable :: get_free_register () {
+    int i;
+    for (i = 1; i < GENERAL_PURPOSE_REGISTERS; i++) {
+        if (this->registers_free[i])
+            return i;
+    }
+    throw Exception("no registers free");
+    return -1;
+}
+
+
+void SymbolTable :: use_register (int reg) {
+    if (! this->registers_free[reg])
+        throw Exception("tried to use an already used register");
+    this->registers_free[reg] = false;
+}
+
+
+void SymbolTable :: free_register (int reg) {
+    if (this->registers_free[reg])
+        throw Exception("tried to free already free register");
+    this->registers_free[reg] = true;
 }
 
 

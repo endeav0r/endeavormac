@@ -11,10 +11,6 @@
 #include "symboltable.hpp"
 #include "token.hpp"
 
-// general purpose registers will be 1 through GENERAL_PURPOSE_REGISTERS - 1
-// if this is 4, then general purpose registers will be 1, 2 and 3
-#define GENERAL_PURPOSE_REGISTERS 6
-
 class Parser {
 
     private :
@@ -34,16 +30,6 @@ class Parser {
         
         SymbolTable table;
         
-        // corresponds to register 1-3. 0 unused
-        bool registers_free[GENERAL_PURPOSE_REGISTERS];
-        
-        // the purpose of these register functions is to allow us to
-        // eventually dynamically store register values on the stack
-        // in current form registers will exhaust
-        int  get_free_register ();
-        void use_register  (int reg);
-        void free_register (int reg);
-        
         void declare_variable (int bytes);
         
         void push_register  (int reg);
@@ -57,7 +43,7 @@ class Parser {
         void bz             (int imm);
         
         void symbol_st (std::string name, int reg);
-		void symbol_ld (std::string name, int reg);
+        void symbol_ld (std::string name, int reg);
         
         void reduce(Token next);
     
