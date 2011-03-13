@@ -13,17 +13,17 @@ ParserStack :: ParserStack (int type, unsigned int constant) {
 
 
 ParserStack :: ParserStack (int type, int reg) {
-	this->type = type;
-	switch (type) {
-		case PS_BLOCK_OPEN :
-		case PS_BLOCK_CLOSE :
-		case PS_BLOCK :
-			this->branch_address = reg;
-			break;
-		case PS_REGISTER :
-			this->reg = reg;
-			break;
-	}
+    this->type = type;
+    switch (type) {
+        case PS_BLOCK_OPEN :
+        case PS_BLOCK_CLOSE :
+        case PS_BLOCK :
+            this->branch_address = reg;
+            break;
+        case PS_REGISTER :
+            this->reg = reg;
+            break;
+    }
 }
 
 

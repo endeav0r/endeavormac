@@ -6,6 +6,11 @@
 
 #include "exception.hpp"
 
+// general purpose registers will be 1 through GENERAL_PURPOSE_REGISTERS - 1
+// if this is 4, then general purpose registers will b 1, 2 and 3
+#define GENERAL_PURPOSE_REGISTERS 5
+
+
 class Symbol {
     
     private :
@@ -15,11 +20,11 @@ class Symbol {
                        // stack frame
         int  address;  // address or offset based on value of absolute
         int  offset;   // what's 4 bytes anyway, two names for clarity
-    
+
     public :
         Symbol (std::string name);
         Symbol ();
-        
+
         std::string g_name     ();
         bool        g_absolute ();
         int         g_offset   ();
@@ -44,12 +49,18 @@ class SymbolTable {
         SymbolTable * next;
         SymbolTable * last;
         int next_free_offset;
+
+        bool registers_free[GENERAL_PURPOSE_REGISTERS];
         
     public :
         SymbolTable ();
         
         void push ();
         void pop  ();
+
+        int  get_free_register ();
+        void use_register      (int reg);
+        void free_register     (int reg);
         
         // add_symbol returns the number of bytes this symbol is taking
         // up, IE if this is a stack variable than SP + offset

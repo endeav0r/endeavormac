@@ -3,7 +3,6 @@
 
 #include <list>
 #include <string>
-#include <sstream>
 
 #include "token.hpp"
 

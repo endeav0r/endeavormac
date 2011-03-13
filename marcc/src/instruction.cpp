@@ -77,9 +77,9 @@ std::string Instruction :: assembly () {
         case OP_CALL :
             out_string << "CALL  " << std::hex << this->IMM;
             return out_string.str();
-		case OP_COMMENT :
-			out_string << "; " << this->comment;
-			return out_string.str();
+        case OP_COMMENT :
+            out_string << "; " << this->comment;
+            return out_string.str();
         default :
             throw Exception("Error creating assembly from instruction");
     }

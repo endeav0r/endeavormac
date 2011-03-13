@@ -46,8 +46,8 @@ void Lexer :: lex () {
     
     for (text_it = this->text.begin(); text_it != this->text.end(); text_it++) {
         if (this->is_whitespace(*text_it)) {
-			if (buf.size() > 0)
-				this->tokens.push_back(Token(buf));
+            if (buf.size() > 0)
+                this->tokens.push_back(Token(buf));
             buf = "";
         }
         else if (this->is_special(*text_it)) {
