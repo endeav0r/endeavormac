@@ -4,41 +4,16 @@
 #include <map>
 #include <string>
 
+#include "register.hpp"
+#include "symbol.hpp"
 #include "exception.hpp"
 
-// general purpose registers will be 1 through GENERAL_PURPOSE_REGISTERS - 1
-// if this is 4, then general purpose registers will b 1, 2 and 3
+// the number of general purpose registers to use
+// 0 = always 0x0000
+// 6 = base pointer
+// 7 = stack pointer
+// 1-5 available
 #define GENERAL_PURPOSE_REGISTERS 5
-
-
-class Symbol {
-    
-    private :
-        std::string name;
-        bool absolute; // is this an absolute address, or relative to BP
-                       // IE is it static/global or in the scope of the
-                       // stack frame
-        int  address;  // address or offset based on value of absolute
-        int  offset;   // what's 4 bytes anyway, two names for clarity
-
-    public :
-        Symbol (std::string name);
-        Symbol ();
-
-        std::string g_name     ();
-        bool        g_absolute ();
-        int         g_offset   ();
-        int         g_address  ();
-        
-        void s_name     (std::string name);
-        void s_absolute (bool absolute);
-        void s_offset   (int offset);
-        void s_address  (int address);
-        
-        Symbol& operator= (Symbol symbol);
-        
-};
-        
 
 
 class SymbolTable {
@@ -50,7 +25,7 @@ class SymbolTable {
         SymbolTable * last;
         int next_free_offset;
 
-        bool registers_free[GENERAL_PURPOSE_REGISTERS];
+        Register registers[GENERAL_PURPOSE_REGISTERS];
         
     public :
         SymbolTable ();
@@ -67,11 +42,11 @@ class SymbolTable {
         int add_symbol (std::string name, bool absolute);
         bool symbol_exists (std::string name);
         
-        int  g_symbol_offset   (std::string name);
-        bool g_symbol_absolute (std::string name);
-        int  g_symbol_address  (std::string name);
-        
-        
+        int        g_symbol_offset   (std::string name);
+        bool       g_symbol_absolute (std::string name);
+        int        g_symbol_address  (std::string name);
+        Symbol &   g_symbol          (std::string name);
+        Register * g_register_ptr    (int reg);
 };
 
 #endif

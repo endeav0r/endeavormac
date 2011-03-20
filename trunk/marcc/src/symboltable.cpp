@@ -1,47 +1,10 @@
 #include "symboltable.hpp"
 
 
-Symbol :: Symbol (std::string name) {
-    this->name     = name;
-    this->absolute = true;
-    this->address  = 0x00000000;
-    this->offset   = 0x00000000;
-}
-
-
-Symbol :: Symbol () {
-    this->name     = name;
-    this->absolute = true;
-    this->address  = 0x00000000;
-    this->offset   = 0x00000000;
-}
-
-
-std::string Symbol :: g_name     () { return this->name;     }
-bool        Symbol :: g_absolute () { return this->absolute; }
-int         Symbol :: g_offset   () { return this->offset;   }
-int         Symbol :: g_address  () { return this->address;  }
-
-
-void Symbol :: s_name     (std::string name) { this->name = name; }
-void Symbol :: s_absolute (bool    absolute) { this->absolute = absolute; }
-void Symbol :: s_offset   (int       offset) { this->offset = offset; }
-void Symbol :: s_address  (int      address) { this->address = address; }
-
-
-Symbol& Symbol :: operator= (Symbol symbol) {
-    this->name     = symbol.g_name();
-    this->absolute = symbol.g_absolute();
-    this->address  = symbol.g_address();
-    this->offset   = symbol.g_offset();
-    return *this;
-}
-
-
 SymbolTable :: SymbolTable () {
     int i;
     for (i = 0; i < GENERAL_PURPOSE_REGISTERS; i++)
-        this->registers_free[i] = true;
+        this->registers[i].s_id(i+1);
     this->previous = NULL;
     this->next = NULL;
     this->last = this;
@@ -51,9 +14,19 @@ SymbolTable :: SymbolTable () {
 
 int SymbolTable :: get_free_register () {
     int i;
-    for (i = 1; i < GENERAL_PURPOSE_REGISTERS; i++) {
-        if (this->registers_free[i])
-            return i;
+    
+    // first find a register without a symbol
+    for (i = 0; i < GENERAL_PURPOSE_REGISTERS; i++) {
+        if ((this->registers[i].g_free())
+            && (this->registers[i].has_symbol() == false))
+            return i+1;
+    }
+    
+    // find any free register
+    for (i = 0; i < GENERAL_PURPOSE_REGISTERS; i++) {
+        if ((this->registers[i].g_free())
+            && (this->registers[i].has_symbol() == false))
+            return i+1;
     }
     throw Exception("no registers free");
     return -1;
@@ -61,16 +34,16 @@ int SymbolTable :: get_free_register () {
 
 
 void SymbolTable :: use_register (int reg) {
-    if (! this->registers_free[reg])
+    if (! this->registers[reg - 1].g_free())
         throw Exception("tried to use an already used register");
-    this->registers_free[reg] = false;
+    this->registers[reg - 1].use();
 }
 
 
 void SymbolTable :: free_register (int reg) {
-    if (this->registers_free[reg])
+    if (this->registers[reg - 1].g_free())
         throw Exception("tried to free already free register");
-    this->registers_free[reg] = true;
+    this->registers[reg - 1].free();
 }
 
 
@@ -120,16 +93,17 @@ bool SymbolTable :: symbol_exists (std::string name) {
 }
 
 
-int SymbolTable :: g_symbol_offset (std::string name) {
-    return this->symbols[name].g_offset();
-}
+int        SymbolTable :: g_symbol_offset   (std::string name) {
+       	    return this->symbols[name].g_offset();   }
+       	
+bool       SymbolTable :: g_symbol_absolute (std::string name) {
+            return this->symbols[name].g_absolute(); }
+        
+int        SymbolTable :: g_symbol_address  (std::string name) {
+            return this->symbols[name].g_address();  }
+        
+Symbol &   SymbolTable :: g_symbol          (std::string name) {
+            return this->symbols[name];              }
 
-
-bool SymbolTable :: g_symbol_absolute (std::string name) {
-    return this->symbols[name].g_absolute();
-}
-
-
-int SymbolTable :: g_symbol_address (std::string name) {
-    return this->symbols[name].g_address();
-}
+Register * SymbolTable :: g_register_ptr    (int reg) {
+			return &(this->registers[reg - 1]);      }

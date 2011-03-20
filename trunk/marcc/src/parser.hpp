@@ -45,6 +45,11 @@ class Parser {
         void symbol_st (std::string name, int reg);
         void symbol_ld (std::string name, int reg);
         
+        // returns the id of a register containing the value of symbol
+        // this is better than symbol_ld because it checks if the symbol is
+        // already in a register first
+        int symbol_to_register (std::string name);
+        
         void reduce(Token next);
     
     public :
