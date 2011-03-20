@@ -290,7 +290,7 @@ void Parser :: reduce (Token next) {
 					this->table.free_register(reg2);
 					reduce = true;
 				}
-				// register equals register := symbol equals register
+				// register equals register := symbol equals register [+]
 				else if ((*stack_it).g_register() == PS_SYMBOL) {
 					reg2 = this->symbol_to_register((*stack_it).g_name());
 					this->stack.pop_front();
@@ -298,6 +298,37 @@ void Parser :: reduce (Token next) {
 					this->stack.pop_front();
 					this->stack.push_front(ParserStack(PS_REGISTER, reg2));
 					this->stack.push_front(ParserStack(PS_EQUALS));
+					this->stack.push_front(ParserStack(PS_REGISTER, reg));
+					reduce = true;
+				}
+			}
+			// lessthan register [+]
+			else if (((*stack_it).g_type() == PS_LESS_THAN)
+			         && (next.g_type() != TOKEN_PLUS)) {
+				stack_it++;
+				// condition := register lessthan register [+]
+				if ((*stack_it).g_type() == PS_REGISTER) {
+					reg2 = (*stack_it).g_register();
+					this->subx(reg, reg, reg2);
+					this->bn(1);
+					this->ba(1);
+					this->jmp_stack.push(&(this->instructions.back()));
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.push_front(ParserStack(PS_CONDITION));
+					this->table.free_register(reg);
+					this->table.free_register(reg2);
+					reduce = true;
+				}
+				// register lessthan register := symbol lessthan register [+]
+				else if ((*stack_it).g_type() == PS_SYMBOL) {
+					reg2 = this->symbol_to_register((*stack_it).g_name());
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.pop_front();
+					this->stack.push_front(ParserStack(PS_REGISTER, reg2));
+					this->stack.push_front(ParserStack(PS_LESS_THAN));
 					this->stack.push_front(ParserStack(PS_REGISTER, reg));
 					reduce = true;
 				}
@@ -325,15 +356,25 @@ void Parser :: reduce (Token next) {
 				stack_it++;
 				if ((*stack_it).g_type() == PS_IF) {
 					// adjust ba from opening of this block
-					(*(this->jmp_stack.top())).s_IMM(this->instructions.size()
-					                                 - constant
-													 - 3); // -2 accounts for ba/bn instructions
+					(*(this->jmp_stack.top())).s_IMM(this->instructions_size()
+					                                 - constant);
 				    this->jmp_stack.pop();
 				    this->stack.pop_front();
 				    this->stack.pop_front();
 				    this->stack.pop_front();
 				    reduce = true;
 				}
+				else if ((*stack_it).g_type() == PS_WHILE) {
+					this->ba((*stack_it).g_branch_address() - 2);
+					// adjust ba from opening of this block
+					(*(this->jmp_stack.top())).s_IMM(this->instructions_size()
+					                                 - constant);
+                    this->jmp_stack.pop();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    reduce = true;
+                }
 			}
 		}
 		// symbol 
@@ -418,6 +459,17 @@ void Parser :: reduce (Token next) {
 }
 
 
+int Parser :: instructions_size () {
+	int size = 0;
+	std::list <Instruction> :: iterator it;
+	for (it = this->instructions.begin(); it != this->instructions.end(); it++) {
+		if ((*it).g_OP() != OP_COMMENT)
+			size++;
+	}
+	return size;
+}
+
+
 void Parser :: parse () {
 
     Token next;
@@ -452,7 +504,7 @@ void Parser :: parse () {
                 this->stack.push_front(ParserStack(PS_ADD));
                 break;
             case TOKEN_BLOCK_OPEN :
-                this->stack.push_front(ParserStack(PS_BLOCK_OPEN, (int) this->instructions.size()));
+                this->stack.push_front(ParserStack(PS_BLOCK_OPEN, (int) this->instructions_size()));
                 break;
             case TOKEN_BLOCK_CLOSE :
                 this->stack.push_front(ParserStack(PS_BLOCK_CLOSE));
@@ -466,6 +518,12 @@ void Parser :: parse () {
             case TOKEN_IF :
                 this->stack.push_front(ParserStack(PS_IF));
                 break;
+            case TOKEN_WHILE :
+            	this->stack.push_front(ParserStack(PS_WHILE, (int) this->instructions_size()));
+            	break;
+        	case TOKEN_LESS_THAN :
+        		this->stack.push_front(ParserStack(PS_LESS_THAN));
+        		break;
             default :
                 throw Exception(std::string("Unknown token ") + (*token_it).g_text());
         }

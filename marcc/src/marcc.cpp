@@ -51,6 +51,8 @@ int main () {
         return -1;
 	if (test_input("if (1 == 1) { a = 2; } a = a + 1;"))
 		return -1;
+	if (test_input("i = 0; while (i < 5) {i = i + 1;}"))
+		return -1;
     
     return 0;
     

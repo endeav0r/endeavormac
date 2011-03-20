@@ -17,6 +17,7 @@ void Instruction :: s_RS2 (int RS2) { this->RS2 = RS2; }
 void Instruction :: s_IMM (unsigned int IMM) { this->IMM = IMM; }
 void Instruction :: s_COMMENT (std::string comment) { this->comment = comment; }
 
+int Instruction :: g_OP () { return this->OP; }
 
 std::string Instruction :: assembly () {
 

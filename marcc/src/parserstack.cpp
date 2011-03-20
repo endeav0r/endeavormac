@@ -18,6 +18,7 @@ ParserStack :: ParserStack (int type, int reg) {
         case PS_BLOCK_OPEN :
         case PS_BLOCK_CLOSE :
         case PS_BLOCK :
+        case PS_WHILE :
             this->branch_address = reg;
             break;
         case PS_REGISTER :
