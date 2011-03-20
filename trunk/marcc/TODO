@@ -1,0 +1,3 @@
+insure that symbols which are part of conditions are always loaded from memory, 
+as we cannot insure that the register those symbols are stored in will not be
+modified in the block following the symbol (applies to loops)

@@ -58,6 +58,8 @@ bool Token :: is_number (std::string name) {
 void Token :: choose_type () {
     if (this->text == std::string("if"))
         this->type = TOKEN_IF;
+    else if (this->text == std::string("while"))
+    	this->type = TOKEN_WHILE;
     else if (this->valid_symbol_name(this->text))
         this->type = TOKEN_SYMBOL;
     else if (this->is_number(this->text))
@@ -88,6 +90,9 @@ void Token :: choose_type () {
             case ')' :
                 this->type = TOKEN_PAREN_CLOSE;
                 break;
+            case '<' :
+            	this->type = TOKEN_LESS_THAN ;
+            	break;
             default :
                 throw Exception("could not tokenize input: " + this->text);
         }

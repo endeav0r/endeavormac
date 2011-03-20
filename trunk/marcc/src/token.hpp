@@ -17,6 +17,8 @@
 #define TOKEN_IF          10
 #define TOKEN_BLOCK_OPEN  11
 #define TOKEN_BLOCK_CLOSE 12
+#define TOKEN_WHILE       13
+#define TOKEN_LESS_THAN   14
 
 
 class Token {

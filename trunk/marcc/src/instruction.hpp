@@ -72,6 +72,8 @@ class Instruction {
         void s_IMM (unsigned int IMM);
         void s_COMMENT (std::string comment);
         
+        int g_OP ();
+        
         uint16_t machine_code();
         std::string assembly();
         

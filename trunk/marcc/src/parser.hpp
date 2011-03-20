@@ -51,6 +51,10 @@ class Parser {
         int symbol_to_register (std::string name);
         
         void reduce(Token next);
+        
+        // currently comments in the instructions are messing things up
+        // this is a temporary quick fix, ugly as it may be
+        int instructions_size ();
     
     public :
         Parser (std::list <Token> tokens);

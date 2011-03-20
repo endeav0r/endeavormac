@@ -19,6 +19,8 @@
 #define PS_BLOCK_CLOSE 12
 #define PS_BLOCK       13
 #define PS_CONDITION   14
+#define PS_WHILE       15
+#define PS_LESS_THAN   16
 
 
 class ParserStack {
