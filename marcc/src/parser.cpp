@@ -130,6 +130,8 @@ void Parser :: symbol_st (std::string name, int reg) {
     int reg1, reg2;
     
     comment.s_COMMENT("symbol st");
+    // the value of symbol <name> is in <reg>, set it up make it so
+    this->table.g_symbol(name).s_register(this->table.g_register_ptr(reg));
     
     if (! this->table.symbol_exists(name))
         throw Exception(std::string("tried to set symbol ") + name + " but it wasn't found");
@@ -170,23 +172,52 @@ void Parser :: symbol_ld (std::string name, int reg) {
         throw Exception(std::string("tried to get symbol ") + name + " but it wasn't found");
     
     if (! this->table.g_symbol_absolute(name)) {
+    	// set registers as used
         reg1 = this->table.get_free_register();
         this->table.use_register(reg1);
         reg2 = this->table.get_free_register();
         this->table.use_register(reg2);
         
+        // put offset into reg1
         this->load_immediate(reg1, this->table.g_symbol_offset(name));
         
         this->instructions.push_back(comment);
+        // add offset to base pointer, place in reg2
         this->addx(reg2, reg1, REG_BASE_POINTER);
         
+        // ld instruction, loading memory at reg2 into reg
         ld.s_RD(reg);
         ld.s_RS1(reg2);
         this->instructions.push_back(ld);
+        
+        // free tmp registers
         this->table.free_register(reg1);
         this->table.free_register(reg2);
     }
 }
+
+
+int Parser :: symbol_to_register (std::string name) {
+	int reg;
+	Instruction comment(OP_COMMENT);
+	Symbol & symbol = this->table.g_symbol(name);
+	if (symbol.register_isset()) {
+		reg = symbol.g_register();
+		this->table.use_register(reg);
+		comment.s_COMMENT(std::string("symbol " + name + " in reg " + (char) ('0' + reg)));
+		this->instructions.push_back(comment);
+	}
+	else {
+		reg = this->table.get_free_register();
+		this->table.use_register(reg);
+		comment.s_COMMENT(std::string("loading symbol " + name + " into reg " + (char) ('0' + reg)));
+		this->instructions.push_back(comment);
+		this->symbol_ld(name, reg);
+	}
+	symbol.s_register(this->table.g_register_ptr(reg));
+	return reg;
+}
+		
 
 
 void Parser :: reduce (Token next) {
@@ -230,9 +261,7 @@ void Parser :: reduce (Token next) {
 				}
 				// register add register := symbol add register
 				else if ((*stack_it).g_type() == PS_SYMBOL) {
-					reg2 = this->table.get_free_register();
-					this->table.use_register(reg2);
-					this->symbol_ld((*stack_it).g_name(), reg2);
+					reg2 = this->symbol_to_register((*stack_it).g_name());
 					this->stack.pop_front();
 					this->stack.pop_front();
 					this->stack.pop_front();
@@ -263,9 +292,7 @@ void Parser :: reduce (Token next) {
 				}
 				// register equals register := symbol equals register
 				else if ((*stack_it).g_register() == PS_SYMBOL) {
-					reg2 = this->table.get_free_register();
-					this->table.use_register(reg2);
-					this->symbol_ld((*stack_it).g_name(), reg2);
+					reg2 = this->symbol_to_register((*stack_it).g_name());
 					this->stack.pop_front();
 					this->stack.pop_front();
 					this->stack.pop_front();
@@ -300,7 +327,7 @@ void Parser :: reduce (Token next) {
 					// adjust ba from opening of this block
 					(*(this->jmp_stack.top())).s_IMM(this->instructions.size()
 					                                 - constant
-													 - 2); // -2 accounts for ba/bn instructions
+													 - 3); // -2 accounts for ba/bn instructions
 				    this->jmp_stack.pop();
 				    this->stack.pop_front();
 				    this->stack.pop_front();
@@ -317,9 +344,7 @@ void Parser :: reduce (Token next) {
 			if (((*stack_it).g_type() == PS_ADD)
 			    || (*stack_it).g_type() == PS_EQUALS) {
 				stack_it--;
-				reg = this->table.get_free_register();
-				this->table.use_register(reg);
-				this->symbol_ld((*stack_it).g_name(), reg);
+			    reg = this->symbol_to_register((*stack_it).g_name());
 				this->stack.pop_front();
 				this->stack.push_front(ParserStack(PS_REGISTER, reg));
 				reduce = true;
