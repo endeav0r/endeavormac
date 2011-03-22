@@ -14,7 +14,7 @@ Instruction :: Instruction (int operation) {
 void Instruction :: s_RD  (int RD)  { this->RD  = RD;  }
 void Instruction :: s_RS1 (int RS1) { this->RS1 = RS1; }
 void Instruction :: s_RS2 (int RS2) { this->RS2 = RS2; }
-void Instruction :: s_IMM (unsigned int IMM) { this->IMM = IMM; }
+void Instruction :: s_IMM (int IMM) { this->IMM = IMM; }
 void Instruction :: s_COMMENT (std::string comment) { this->comment = comment; }
 
 int Instruction :: g_OP () { return this->OP; }
@@ -61,22 +61,22 @@ std::string Instruction :: assembly () {
         case OP_RET :
             return "RET";
         case OP_ADDI :
-            out_string << "ADDI  r" << this->RD << ", " << std::hex << this->IMM;
+            out_string << "ADDI  r" << this->RD << ", " << this->IMM;
             return out_string.str();
         case OP_BA :
-            out_string << "BA    " << std::hex << this->IMM;
+            out_string << "BA    " << (this->IMM);
             return out_string.str();
         case OP_BN :
-            out_string << "BN    " << std::hex << this->IMM;
+            out_string << "BN    " << this->IMM;
             return out_string.str();
         case OP_BZ :
-            out_string << "BZ    " << std::hex << this->IMM;
+            out_string << "BZ    " << this->IMM;
             return out_string.str();
         case OP_SETHI :
-            out_string << "SETHI r" << this->RD << ", " << std::hex << this->IMM;
+            out_string << "SETHI r" << this->RD << ", " << this->IMM;
             return out_string.str();
         case OP_CALL :
-            out_string << "CALL  " << std::hex << this->IMM;
+            out_string << "CALL  " << this->IMM;
             return out_string.str();
         case OP_COMMENT :
             out_string << "; " << this->comment;

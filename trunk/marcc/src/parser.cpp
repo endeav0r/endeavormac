@@ -129,6 +129,9 @@ void Parser :: symbol_st (std::string name, int reg) {
     Instruction st(OP_ST);
     int reg1, reg2;
     
+	Symbol & symbol = this->table.g_symbol(name);
+	symbol.s_register(this->table.g_register_ptr(reg));
+    
     comment.s_COMMENT("symbol st");
     // the value of symbol <name> is in <reg>, set it up make it so
     this->table.g_symbol(name).s_register(this->table.g_register_ptr(reg));
@@ -165,6 +168,9 @@ void Parser :: symbol_ld (std::string name, int reg) {
     Instruction comment(OP_COMMENT);
     Instruction ld(OP_LD);
     int reg1, reg2;
+    
+	Symbol & symbol = this->table.g_symbol(name);
+	symbol.s_register(this->table.g_register_ptr(reg));
     
     comment.s_COMMENT("symbol ld");
     
@@ -214,7 +220,6 @@ int Parser :: symbol_to_register (std::string name) {
 		this->instructions.push_back(comment);
 		this->symbol_ld(name, reg);
 	}
-	symbol.s_register(this->table.g_register_ptr(reg));
 	return reg;
 }
 		
@@ -292,7 +297,9 @@ void Parser :: reduce (Token next) {
 				}
 				// register equals register := symbol equals register [+]
 				else if ((*stack_it).g_register() == PS_SYMBOL) {
-					reg2 = this->symbol_to_register((*stack_it).g_name());
+                    reg2 = this->table.get_free_register();
+                    this->table.use_register(reg2);
+                    this->symbol_ld((*stack_it).g_name(), reg2);
 					this->stack.pop_front();
 					this->stack.pop_front();
 					this->stack.pop_front();
@@ -323,7 +330,9 @@ void Parser :: reduce (Token next) {
 				}
 				// register lessthan register := symbol lessthan register [+]
 				else if ((*stack_it).g_type() == PS_SYMBOL) {
-					reg2 = this->symbol_to_register((*stack_it).g_name());
+                    reg2 = this->table.get_free_register();
+                    this->table.use_register(reg2);
+                    this->symbol_ld((*stack_it).g_name(), reg2);
 					this->stack.pop_front();
 					this->stack.pop_front();
 					this->stack.pop_front();
@@ -365,7 +374,9 @@ void Parser :: reduce (Token next) {
 				    reduce = true;
 				}
 				else if ((*stack_it).g_type() == PS_WHILE) {
-					this->ba((*stack_it).g_branch_address() - 2);
+                    std::cout << "debug branch address " << (*stack_it).g_branch_address() 
+                    << " :: " << this->instructions_size() << "\n";
+					this->ba(0 - (this->instructions_size() - (*stack_it).g_branch_address()));
 					// adjust ba from opening of this block
 					(*(this->jmp_stack.top())).s_IMM(this->instructions_size()
 					                                 - constant);
@@ -381,13 +392,21 @@ void Parser :: reduce (Token next) {
 		else if ((*stack_it).g_type() == PS_SYMBOL) {
 			stack_it++;
 			// add       register := add    symbol
-			// equals    register := equals symbol
-            // less_than register := less_than symbol
-			if (((*stack_it).g_type() == PS_ADD)
-			    || ((*stack_it).g_type() == PS_EQUALS)
-                || ((*stack_it).g_type() == PS_LESS_THAN)) {
+			if ((*stack_it).g_type() == PS_ADD) {
 				stack_it--;
 			    reg = this->symbol_to_register((*stack_it).g_name());
+				this->stack.pop_front();
+				this->stack.push_front(ParserStack(PS_REGISTER, reg));
+				reduce = true;
+			}
+			// equals    register := equals symbol
+            // less_than register := less_than symbol
+			if (((*stack_it).g_type() == PS_EQUALS)
+                || ((*stack_it).g_type() == PS_LESS_THAN)) {
+				stack_it--;
+                reg = this->table.get_free_register();
+                this->table.use_register(reg);
+                this->symbol_ld((*stack_it).g_name(), reg);
 				this->stack.pop_front();
 				this->stack.push_front(ParserStack(PS_REGISTER, reg));
 				reduce = true;
