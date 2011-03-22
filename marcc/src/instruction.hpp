@@ -60,7 +60,7 @@ class Instruction {
         int RS1;
         int RS2;
         std::string comment;
-        unsigned int IMM;
+        int IMM;
     
     public :
         Instruction ();
@@ -69,7 +69,7 @@ class Instruction {
         void s_RD  (int RD);
         void s_RS1 (int RS1);
         void s_RS2 (int RS2);
-        void s_IMM (unsigned int IMM);
+        void s_IMM (int IMM);
         void s_COMMENT (std::string comment);
         
         int g_OP ();
