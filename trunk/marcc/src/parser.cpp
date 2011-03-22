@@ -380,10 +380,12 @@ void Parser :: reduce (Token next) {
 		// symbol 
 		else if ((*stack_it).g_type() == PS_SYMBOL) {
 			stack_it++;
-			// add    register := add    symbol
-			// equals register := equals symbol
+			// add       register := add    symbol
+			// equals    register := equals symbol
+            // less_than register := less_than symbol
 			if (((*stack_it).g_type() == PS_ADD)
-			    || (*stack_it).g_type() == PS_EQUALS) {
+			    || ((*stack_it).g_type() == PS_EQUALS)
+                || ((*stack_it).g_type() == PS_LESS_THAN)) {
 				stack_it--;
 			    reg = this->symbol_to_register((*stack_it).g_name());
 				this->stack.pop_front();
