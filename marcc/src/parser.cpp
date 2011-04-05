@@ -104,23 +104,23 @@ void Parser :: subx (int reg_dest, int reg_1, int reg_2) {
 
 
 void Parser :: bn (int imm) {
-	Instruction bn(OP_BN);
-	bn.s_IMM(imm);
-	this->instructions.push_back(bn);
+    Instruction bn(OP_BN);
+    bn.s_IMM(imm);
+    this->instructions.push_back(bn);
 }
 
 
 void Parser :: ba (int imm) {
-	Instruction ba(OP_BA);
-	ba.s_IMM(imm);
-	this->instructions.push_back(ba);
+    Instruction ba(OP_BA);
+    ba.s_IMM(imm);
+    this->instructions.push_back(ba);
 }
 
 
 void Parser :: bz (int imm) {
-	Instruction bz(OP_BZ);
-	bz.s_IMM(imm);
-	this->instructions.push_back(bz);
+    Instruction bz(OP_BZ);
+    bz.s_IMM(imm);
+    this->instructions.push_back(bz);
 }
 
 
@@ -129,8 +129,8 @@ void Parser :: symbol_st (std::string name, int reg) {
     Instruction st(OP_ST);
     int reg1, reg2;
     
-	Symbol & symbol = this->table.g_symbol(name);
-	symbol.s_register(this->table.g_register_ptr(reg));
+    Symbol & symbol = this->table.g_symbol(name);
+    symbol.s_register(this->table.g_register_ptr(reg));
     
     comment.s_COMMENT("symbol st");
     // the value of symbol <name> is in <reg>, set it up make it so
@@ -169,8 +169,8 @@ void Parser :: symbol_ld (std::string name, int reg) {
     Instruction ld(OP_LD);
     int reg1, reg2;
     
-	Symbol & symbol = this->table.g_symbol(name);
-	symbol.s_register(this->table.g_register_ptr(reg));
+    Symbol & symbol = this->table.g_symbol(name);
+    symbol.s_register(this->table.g_register_ptr(reg));
     
     comment.s_COMMENT("symbol ld");
     
@@ -178,7 +178,7 @@ void Parser :: symbol_ld (std::string name, int reg) {
         throw Exception(std::string("tried to get symbol ") + name + " but it wasn't found");
     
     if (! this->table.g_symbol_absolute(name)) {
-    	// set registers as used
+        // set registers as used
         reg1 = this->table.get_free_register();
         this->table.use_register(reg1);
         reg2 = this->table.get_free_register();
@@ -204,25 +204,25 @@ void Parser :: symbol_ld (std::string name, int reg) {
 
 
 int Parser :: symbol_to_register (std::string name) {
-	int reg;
-	Instruction comment(OP_COMMENT);
-	Symbol & symbol = this->table.g_symbol(name);
-	if (symbol.register_isset()) {
-		reg = symbol.g_register();
-		this->table.use_register(reg);
-		comment.s_COMMENT(std::string("symbol " + name + " in reg " + (char) ('0' + reg)));
-		this->instructions.push_back(comment);
-	}
-	else {
-		reg = this->table.get_free_register();
-		this->table.use_register(reg);
-		comment.s_COMMENT(std::string("loading symbol " + name + " into reg " + (char) ('0' + reg)));
-		this->instructions.push_back(comment);
-		this->symbol_ld(name, reg);
-	}
-	return reg;
+    int reg;
+    Instruction comment(OP_COMMENT);
+    Symbol & symbol = this->table.g_symbol(name);
+    if (symbol.register_isset()) {
+        reg = symbol.g_register();
+        this->table.use_register(reg);
+        comment.s_COMMENT(std::string("symbol " + name + " in reg " + (char) ('0' + reg)));
+        this->instructions.push_back(comment);
+    }
+    else {
+        reg = this->table.get_free_register();
+        this->table.use_register(reg);
+        comment.s_COMMENT(std::string("loading symbol " + name + " into reg " + (char) ('0' + reg)));
+        this->instructions.push_back(comment);
+        this->symbol_ld(name, reg);
+    }
+    return reg;
 }
-		
+        
 
 
 void Parser :: reduce (Token next) {
@@ -249,209 +249,209 @@ void Parser :: reduce (Token next) {
         }
         // register
         else if ((*stack_it).g_type() == PS_REGISTER) {
-			reg = (*stack_it).g_register();
-			stack_it++;
-			// add register
-			if ((*stack_it).g_type() == PS_ADD) {
-				stack_it++;
-				// register := register add register
-				if ((*stack_it).g_type() == PS_REGISTER) {
-					this->addx(reg, reg, (*stack_it).g_register());
-					this->table.free_register((*stack_it).g_register());
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.push_front(ParserStack(PS_REGISTER, reg));
-					reduce = true;
-				}
-				// register add register := symbol add register
-				else if ((*stack_it).g_type() == PS_SYMBOL) {
-					reg2 = this->symbol_to_register((*stack_it).g_name());
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.push_front(ParserStack(PS_REGISTER, reg2));
-					this->stack.push_front(ParserStack(PS_ADD));
-					this->stack.push_front(ParserStack(PS_REGISTER, reg));
-					reduce = true;
-				}
-			}
-			// equals register [+]
-			else if (((*stack_it).g_type() == PS_EQUALS)
-			         && (next.g_type() != TOKEN_PLUS)) {
-				stack_it++;
-				// condition := register equals register [+]
-				if ((*stack_it).g_type() == PS_REGISTER) {
-					reg2 = (*stack_it).g_register();
-					this->subx(reg, reg, reg2);
-					this->bz(1);
-					this->ba(1);
-					this->jmp_stack.push(&(this->instructions.back()));
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.push_front(ParserStack(PS_CONDITION));
-					this->table.free_register(reg);
-					this->table.free_register(reg2);
-					reduce = true;
-				}
-				// register equals register := symbol equals register [+]
-				else if ((*stack_it).g_register() == PS_SYMBOL) {
+            reg = (*stack_it).g_register();
+            stack_it++;
+            // add register
+            if ((*stack_it).g_type() == PS_ADD) {
+                stack_it++;
+                // register := register add register
+                if ((*stack_it).g_type() == PS_REGISTER) {
+                    this->addx(reg, reg, (*stack_it).g_register());
+                    this->table.free_register((*stack_it).g_register());
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(ParserStack(PS_REGISTER, reg));
+                    reduce = true;
+                }
+                // register add register := symbol add register
+                else if ((*stack_it).g_type() == PS_SYMBOL) {
+                    reg2 = this->symbol_to_register((*stack_it).g_name());
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(ParserStack(PS_REGISTER, reg2));
+                    this->stack.push_front(ParserStack(PS_ADD));
+                    this->stack.push_front(ParserStack(PS_REGISTER, reg));
+                    reduce = true;
+                }
+            }
+            // equals register [+]
+            else if (((*stack_it).g_type() == PS_EQUALS)
+                     && (next.g_type() != TOKEN_PLUS)) {
+                stack_it++;
+                // condition := register equals register [+]
+                if ((*stack_it).g_type() == PS_REGISTER) {
+                    reg2 = (*stack_it).g_register();
+                    this->subx(reg, reg, reg2);
+                    this->bz(1);
+                    this->ba(1);
+                    this->jmp_stack.push(&(this->instructions.back()));
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(ParserStack(PS_CONDITION));
+                    this->table.free_register(reg);
+                    this->table.free_register(reg2);
+                    reduce = true;
+                }
+                // register equals register := symbol equals register [+]
+                else if ((*stack_it).g_register() == PS_SYMBOL) {
                     reg2 = this->table.get_free_register();
                     this->table.use_register(reg2);
                     this->symbol_ld((*stack_it).g_name(), reg2);
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.push_front(ParserStack(PS_REGISTER, reg2));
-					this->stack.push_front(ParserStack(PS_EQUALS));
-					this->stack.push_front(ParserStack(PS_REGISTER, reg));
-					reduce = true;
-				}
-			}
-			// lessthan register [+]
-			else if (((*stack_it).g_type() == PS_LESS_THAN)
-			         && (next.g_type() != TOKEN_PLUS)) {
-				stack_it++;
-				// condition := register lessthan register [+]
-				if ((*stack_it).g_type() == PS_REGISTER) {
-					reg2 = (*stack_it).g_register();
-					this->subx(reg, reg, reg2);
-					this->bn(1);
-					this->ba(1);
-					this->jmp_stack.push(&(this->instructions.back()));
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.push_front(ParserStack(PS_CONDITION));
-					this->table.free_register(reg);
-					this->table.free_register(reg2);
-					reduce = true;
-				}
-				// register lessthan register := symbol lessthan register [+]
-				else if ((*stack_it).g_type() == PS_SYMBOL) {
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(ParserStack(PS_REGISTER, reg2));
+                    this->stack.push_front(ParserStack(PS_EQUALS));
+                    this->stack.push_front(ParserStack(PS_REGISTER, reg));
+                    reduce = true;
+                }
+            }
+            // lessthan register [+]
+            else if (((*stack_it).g_type() == PS_LESS_THAN)
+                     && (next.g_type() != TOKEN_PLUS)) {
+                stack_it++;
+                // condition := register lessthan register [+]
+                if ((*stack_it).g_type() == PS_REGISTER) {
+                    reg2 = (*stack_it).g_register();
+                    this->subx(reg, reg, reg2);
+                    this->bn(1);
+                    this->ba(1);
+                    this->jmp_stack.push(&(this->instructions.back()));
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(ParserStack(PS_CONDITION));
+                    this->table.free_register(reg);
+                    this->table.free_register(reg2);
+                    reduce = true;
+                }
+                // register lessthan register := symbol lessthan register [+]
+                else if ((*stack_it).g_type() == PS_SYMBOL) {
                     reg2 = this->table.get_free_register();
                     this->table.use_register(reg2);
                     this->symbol_ld((*stack_it).g_name(), reg2);
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.push_front(ParserStack(PS_REGISTER, reg2));
-					this->stack.push_front(ParserStack(PS_LESS_THAN));
-					this->stack.push_front(ParserStack(PS_REGISTER, reg));
-					reduce = true;
-				}
-			}
-		}
-		// block_close
-		else if ((*stack_it).g_type() == PS_BLOCK_CLOSE) {
-			stack_it++;
-			// block := block_open block_close
-			if ((*stack_it).g_type() == PS_BLOCK_OPEN) {
-				constant = (*stack_it).g_branch_address();
-				this->stack.pop_front();
-				this->stack.pop_front();
-				this->stack.push_front(ParserStack(PS_BLOCK, constant));
-				reduce = true;
-			}
-		}
-		//block
-		else if ((*stack_it).g_type() == PS_BLOCK) {
-			constant = (*stack_it).g_branch_address();
-			stack_it++;
-			// condition block
-			if ((*stack_it).g_type() == PS_CONDITION) {
-				// if condition block
-				stack_it++;
-				if ((*stack_it).g_type() == PS_IF) {
-					// adjust ba from opening of this block
-					(*(this->jmp_stack.top())).s_IMM(this->instructions_size()
-					                                 - constant);
-				    this->jmp_stack.pop();
-				    this->stack.pop_front();
-				    this->stack.pop_front();
-				    this->stack.pop_front();
-				    reduce = true;
-				}
-				else if ((*stack_it).g_type() == PS_WHILE) {
-                    std::cout << "debug branch address " << (*stack_it).g_branch_address() 
-                    << " :: " << this->instructions_size() << "\n";
-					this->ba(0 - (this->instructions_size() - (*stack_it).g_branch_address()));
-					// adjust ba from opening of this block
-					(*(this->jmp_stack.top())).s_IMM(this->instructions_size()
-					                                 - constant);
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(ParserStack(PS_REGISTER, reg2));
+                    this->stack.push_front(ParserStack(PS_LESS_THAN));
+                    this->stack.push_front(ParserStack(PS_REGISTER, reg));
+                    reduce = true;
+                }
+            }
+        }
+        // block_close
+        else if ((*stack_it).g_type() == PS_BLOCK_CLOSE) {
+            stack_it++;
+            // block := block_open block_close
+            if ((*stack_it).g_type() == PS_BLOCK_OPEN) {
+                constant = (*stack_it).g_branch_address();
+                this->stack.pop_front();
+                this->stack.pop_front();
+                this->stack.push_front(ParserStack(PS_BLOCK, constant));
+                reduce = true;
+            }
+        }
+        //block
+        else if ((*stack_it).g_type() == PS_BLOCK) {
+            constant = (*stack_it).g_branch_address();
+            stack_it++;
+            // condition block
+            if ((*stack_it).g_type() == PS_CONDITION) {
+                // if condition block
+                stack_it++;
+                if ((*stack_it).g_type() == PS_IF) {
+                    // adjust ba from opening of this block
+                    (*(this->jmp_stack.top())).s_IMM(this->instructions_size()
+                                                     - constant);
                     this->jmp_stack.pop();
                     this->stack.pop_front();
                     this->stack.pop_front();
                     this->stack.pop_front();
                     reduce = true;
                 }
-			}
-		}
-		// symbol 
-		else if ((*stack_it).g_type() == PS_SYMBOL) {
-			stack_it++;
-			// add       register := add    symbol
-			if ((*stack_it).g_type() == PS_ADD) {
-				stack_it--;
-			    reg = this->symbol_to_register((*stack_it).g_name());
-				this->stack.pop_front();
-				this->stack.push_front(ParserStack(PS_REGISTER, reg));
-				reduce = true;
-			}
-			// equals    register := equals symbol
+                else if ((*stack_it).g_type() == PS_WHILE) {
+                    std::cout << "debug branch address " << (*stack_it).g_branch_address() 
+                    << " :: " << this->instructions_size() << "\n";
+                    this->ba(0 - (this->instructions_size() - (*stack_it).g_branch_address()));
+                    // adjust ba from opening of this block
+                    (*(this->jmp_stack.top())).s_IMM(this->instructions_size()
+                                                     - constant);
+                    this->jmp_stack.pop();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    reduce = true;
+                }
+            }
+        }
+        // symbol 
+        else if ((*stack_it).g_type() == PS_SYMBOL) {
+            stack_it++;
+            // add       register := add    symbol
+            if ((*stack_it).g_type() == PS_ADD) {
+                stack_it--;
+                reg = this->symbol_to_register((*stack_it).g_name());
+                this->stack.pop_front();
+                this->stack.push_front(ParserStack(PS_REGISTER, reg));
+                reduce = true;
+            }
+            // equals    register := equals symbol
             // less_than register := less_than symbol
-			if (((*stack_it).g_type() == PS_EQUALS)
+            if (((*stack_it).g_type() == PS_EQUALS)
                 || ((*stack_it).g_type() == PS_LESS_THAN)) {
-				stack_it--;
+                stack_it--;
                 reg = this->table.get_free_register();
                 this->table.use_register(reg);
                 this->symbol_ld((*stack_it).g_name(), reg);
-				this->stack.pop_front();
-				this->stack.push_front(ParserStack(PS_REGISTER, reg));
-				reduce = true;
-			}
-		}
-		// assign
-		if ((*stack_it).g_type() == PS_ASSIGN) {
-			stack_it++;
-			// equals := assign assign
-			if ((*stack_it).g_type() == PS_ASSIGN) {
-				this->stack.pop_front();
-				this->stack.pop_front();
-				this->stack.push_front(ParserStack(PS_EQUALS));
-				reduce = true;
-			}
-		}
-		// paren_close
-		else if ((*stack_it).g_type() == PS_PAREN_CLOSE) {
-			stack_it++;
-			// register paren_close
-			if ((*stack_it).g_type() == PS_REGISTER) {
-				reg = (*stack_it).g_register();
-				stack_it++;
-				// register := paren_open register paren_close
-				if ((*stack_it).g_type() == PS_PAREN_OPEN) {
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.push_front(ParserStack(PS_REGISTER, reg));
-					reduce = true;
-				}
-			}
-			// condition paren_close
-			else if ((*stack_it).g_type() == PS_CONDITION) {
-				stack_it++;
-				// condition := paren_open condition paren_close
-				if ((*stack_it).g_type() == PS_PAREN_OPEN) {
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.pop_front();
-					this->stack.push_front(ParserStack(PS_CONDITION));
-					reduce = true;
-				}
-			}
-		}
+                this->stack.pop_front();
+                this->stack.push_front(ParserStack(PS_REGISTER, reg));
+                reduce = true;
+            }
+        }
+        // assign
+        if ((*stack_it).g_type() == PS_ASSIGN) {
+            stack_it++;
+            // equals := assign assign
+            if ((*stack_it).g_type() == PS_ASSIGN) {
+                this->stack.pop_front();
+                this->stack.pop_front();
+                this->stack.push_front(ParserStack(PS_EQUALS));
+                reduce = true;
+            }
+        }
+        // paren_close
+        else if ((*stack_it).g_type() == PS_PAREN_CLOSE) {
+            stack_it++;
+            // register paren_close
+            if ((*stack_it).g_type() == PS_REGISTER) {
+                reg = (*stack_it).g_register();
+                stack_it++;
+                // register := paren_open register paren_close
+                if ((*stack_it).g_type() == PS_PAREN_OPEN) {
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(ParserStack(PS_REGISTER, reg));
+                    reduce = true;
+                }
+            }
+            // condition paren_close
+            else if ((*stack_it).g_type() == PS_CONDITION) {
+                stack_it++;
+                // condition := paren_open condition paren_close
+                if ((*stack_it).g_type() == PS_PAREN_OPEN) {
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(ParserStack(PS_CONDITION));
+                    reduce = true;
+                }
+            }
+        }
         // terminator
         else if ((*stack_it).g_type() == PS_TERMINATOR) {
             stack_it++;
@@ -481,13 +481,13 @@ void Parser :: reduce (Token next) {
 
 
 int Parser :: instructions_size () {
-	int size = 0;
-	std::list <Instruction> :: iterator it;
-	for (it = this->instructions.begin(); it != this->instructions.end(); it++) {
-		if ((*it).g_OP() != OP_COMMENT)
-			size++;
-	}
-	return size;
+    int size = 0;
+    std::list <Instruction> :: iterator it;
+    for (it = this->instructions.begin(); it != this->instructions.end(); it++) {
+        if ((*it).g_OP() != OP_COMMENT)
+            size++;
+    }
+    return size;
 }
 
 
@@ -496,7 +496,7 @@ void Parser :: parse () {
     Token next;
     std::list <Token> :: iterator token_it;
     std::list <ParserStack> :: iterator stack_it;
-	Instruction hlt(OP_HLT);
+    Instruction hlt(OP_HLT);
     
     for (token_it  = this->tokens.begin();
          token_it != this->tokens.end();
@@ -540,11 +540,11 @@ void Parser :: parse () {
                 this->stack.push_front(ParserStack(PS_IF));
                 break;
             case TOKEN_WHILE :
-            	this->stack.push_front(ParserStack(PS_WHILE, (int) this->instructions_size()));
-            	break;
-        	case TOKEN_LESS_THAN :
-        		this->stack.push_front(ParserStack(PS_LESS_THAN));
-        		break;
+                this->stack.push_front(ParserStack(PS_WHILE, (int) this->instructions_size()));
+                break;
+            case TOKEN_LESS_THAN :
+                this->stack.push_front(ParserStack(PS_LESS_THAN));
+                break;
             default :
                 throw Exception(std::string("Unknown token ") + (*token_it).g_text());
         }
@@ -565,8 +565,8 @@ void Parser :: parse () {
          }
          std::cout << "\n";
      }
-	 else
-		this->instructions.push_back(hlt);
+     else
+        this->instructions.push_back(hlt);
     
 }
 
