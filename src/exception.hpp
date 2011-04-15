@@ -1,5 +1,5 @@
-#ifndef error_HEADER
-#define error_HEADER
+#ifndef exception_HEADER
+#define exception_HEADER
 
 #include <string>
 

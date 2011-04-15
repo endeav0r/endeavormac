@@ -4,11 +4,15 @@ CPP = g++
 BUILD_DIR = obj/
 SRC_DIR = src/
 
-marcc : exception instruction lexer parser parserstack register symbol symboltable token
+marcc : exception instruction lexer parser astree register symbol symboltable token
 	$(CPP) -Wall -g -o marcc $(SRC_DIR)marcc.cpp \
 	$(BUILD_DIR)exception.o $(BUILD_DIR)instruction.o $(BUILD_DIR)lexer.o $(BUILD_DIR)parser.o \
-	$(BUILD_DIR)parserstack.o $(BUILD_DIR)symboltable.o $(BUILD_DIR)token.o $(BUILD_DIR)symbol.o \
+	$(BUILD_DIR)astree.o $(BUILD_DIR)symboltable.o $(BUILD_DIR)token.o $(BUILD_DIR)symbol.o \
 	$(BUILD_DIR)register.o
+
+
+astree : $(SRC_DIR)astree.cpp
+	$(CPP) $(FLAGS) $(SRC_DIR)astree.cpp -o $(BUILD_DIR)astree.o
 
 exception : $(SRC_DIR)exception.cpp
 	$(CPP) $(FLAGS) $(SRC_DIR)exception.cpp -o $(BUILD_DIR)exception.o
@@ -21,9 +25,6 @@ lexer : $(SRC_DIR)lexer.cpp
 
 parser : $(SRC_DIR)parser.cpp
 	$(CPP) $(FLAGS) $(SRC_DIR)parser.cpp -o $(BUILD_DIR)parser.o
-
-parserstack : $(SRC_DIR)parserstack.cpp
-	$(CPP) $(FLAGS) $(SRC_DIR)parserstack.cpp -o $(BUILD_DIR)parserstack.o
 
 register : $(SRC_DIR)register.cpp
 	$(CPP) $(FLAGS) $(SRC_DIR)register.cpp -o $(BUILD_DIR)register.o

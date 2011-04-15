@@ -3,16 +3,14 @@
 #include <iostream>
 
 #include "exception.hpp"
-#include "instruction.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
-#include "token.hpp"
+#include "astree.hpp"
 
 
 int test_input (std::string input) {    
-    std::list <Instruction> instructions;
-    std::list <Instruction> :: iterator instruction_it;
-
+    std::list <ASTree *> tree;
+    std::list <ASTree *> :: iterator tree_it;
     try {
         
         std::cout << "\nRUNNING TEST\n" << input << "\n";
@@ -23,12 +21,11 @@ int test_input (std::string input) {
         Parser parser(lexer.g_tokens());
         parser.parse();
         
-        instructions = parser.g_instructions();
-        for (instruction_it  = instructions.begin();
-             instruction_it != instructions.end();
-             instruction_it++) {
-            std::cout << (*instruction_it).assembly() << "\n";
+        tree = parser.g_tree();
+        for (tree_it = tree.begin(); tree_it != tree.end(); tree_it++) {
+            (*tree_it)->debug(0);
         }
+        
         std::cout << "\n";
     }
     catch (Exception e) {
@@ -43,16 +40,14 @@ int test_input (std::string input) {
 
 int main () {
     
-    if (test_input("var = 7;"))
+    if (test_input("var = 7 + 4;"))
         return -1;
-    if (test_input("var = 4 + 7;"))
+    
+    if (test_input("{var = 1 + 2 + (3 + 4);}"))
         return -1;
-    if (test_input("a = 1 + 2; b = 3 + 4; a = a + b;"))
+    
+    if (test_input("if (4 == 5) {a = 3;}"))
         return -1;
-	if (test_input("if (1 == 1) { a = 2; } a = a + 1;"))
-		return -1;
-	if (test_input("i = 0; while (i < 5) {i = i + 1;}"))
-		return -1;
     
     return 0;
     
