@@ -1,0 +1,7 @@
+R1 => Register for returning results
+R2 => Accumulator
+R3 => for offsets
+R4 => First  Register for loading constants
+R5 => Second Register for loading constants
+R6 => Base Pointer
+R7 => Stack Pointer
