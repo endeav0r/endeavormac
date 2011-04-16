@@ -4,8 +4,8 @@ int ASTreeBlock :: next_id = 0;
 
 void ASTree     :: debug (int depth) { std::cout << depth << "\tASTree\n"; }
 void ASTreeExpr :: debug (int depth) { std::cout << depth << "\tASTreeExpr\n"; }
-void ASTreeExprSymbol :: debug (int depth) { 
-    std::cout << depth << "\tASTreeExprSymbol " << this->symbol << "\n"; }
+void ASTreeSymbol :: debug (int depth) { 
+    std::cout << depth << "\tASTreeSymbol " << this->symbol << "\n"; }
 void ASTreeExprConstant :: debug (int depth) {
     std::cout << depth << "\tASTreeExprConstant " << this->constant << "\n"; }
 void ASTreeAssign :: debug (int depth) {
@@ -14,6 +14,18 @@ void ASTreeAssign :: debug (int depth) {
     this->left->debug(depth + 1);
     std::cout << depth << "\tRHS:\n";
     this->right->debug(depth + 1);
+}
+void ASTreeDecl :: debug (int depth) {
+    std::cout << depth << "\tASTreeDec " << this->type << "\n";
+}
+void ASTreeExprVar :: debug (int depth) {
+    std::cout << depth << "\tASTreeExprVar\n";
+    std::cout << depth << "\tsymbol\n";
+    this->symbol->debug(depth + 1);
+    if (this->decl != NULL) {
+        std::cout << depth << "\tdecl\n";
+        this->decl->debug(depth + 1);
+    }
 }
 void ASTreeExprArithmetic :: debug (int depth) {
     std::cout << depth << "\tASTreeArithmetic ";
@@ -60,6 +72,13 @@ void ASTreeIf :: debug (int depth) {
     std::cout << depth << "\tblock:\n";
     this->block->debug(depth + 1);
 }
+void ASTreeWhile :: debug (int depth) {
+    std::cout << depth << "\tASTreeWhile\n";
+    std::cout << depth << "\tcondition:\n";
+    this->condition->debug(depth + 1);
+    std::cout << depth << "\tblock:\n";
+    this->block->debug(depth + 1);
+}
 void ASTreeTerminator :: debug (int depth) { 
     std :: cout << depth << "\tASTreeTerminator\n"; }
 void ASTreeParenOpen :: debug (int depth) { 
@@ -77,9 +96,19 @@ ASTreeExprConstant :: ASTreeExprConstant (unsigned int constant) {
     this->constant = constant;
 }
 
-ASTreeExprSymbol :: ASTreeExprSymbol (std::string symbol) {
+ASTreeSymbol :: ASTreeSymbol (std::string symbol) {
     this->symbol = symbol;
 }
+
+ASTreeDecl :: ASTreeDecl (int type) { this->type = type; }
+
+ASTreeExprVar :: ASTreeExprVar () {
+    this->symbol = NULL;
+    this->decl = NULL;
+}
+
+void ASTreeExprVar :: s_symbol (ASTreeSymbol * symbol) { this->symbol = symbol; }
+void ASTreeExprVar :: s_decl   (ASTreeDecl   * decl  ) { this->decl   = decl;   }
 
 ASTreeExprArithmetic :: ASTreeExprArithmetic (int operation) {
     this->operation = operation;
@@ -95,7 +124,7 @@ ASTreeAssign :: ASTreeAssign () {
     this->right = NULL;
 }
 
-ASTreeAssign :: ASTreeAssign (ASTreeExprSymbol * left,
+ASTreeAssign :: ASTreeAssign (ASTreeExprVar * left,
                               ASTreeExpr * right) {
     this->left = left;
     this->right = right;
@@ -106,8 +135,8 @@ ASTreeAssign :: ~ ASTreeAssign () {
     delete this->right;
 }
 
-void ASTreeAssign :: s_left  (ASTreeExprSymbol * left)  { this->left  = left; }
-void ASTreeAssign :: s_right (ASTreeExpr       * right) { this->right = right; }
+void ASTreeAssign :: s_left  (ASTreeExprVar * left)  { this->left  = left; }
+void ASTreeAssign :: s_right (ASTreeExpr    * right) { this->right = right; }
 
 ASTreeStatement :: ~ASTreeStatement () {
     std::list <ASTree *> :: iterator it;
@@ -147,6 +176,14 @@ ASTreeIf :: ~ASTreeIf () {
 
 void ASTreeIf :: s_condition (ASTreeCondition * condition) { this->condition = condition; }
 void ASTreeIf :: s_block     (ASTreeBlock * block)         { this->block = block; }
+
+ASTreeWhile :: ~ASTreeWhile () {
+    delete this->condition;
+    delete this->block;
+}
+
+void ASTreeWhile :: s_condition (ASTreeCondition * condition) { this->condition = condition; }
+void ASTreeWhile :: s_block     (ASTreeBlock * block)         { this->block = block; }
 
 void ASTreeBlock :: push_statement_front (ASTreeStatement * statement) {
     this->statements.push_front(statement);

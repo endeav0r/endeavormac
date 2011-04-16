@@ -48,6 +48,9 @@ int main () {
     
     if (test_input("if (4 == 5) {a = 3;}"))
         return -1;
+
+    if (test_input("n = 0; while (n < 5) {n = n + 1;}"))
+        return -1;
     
     return 0;
     
