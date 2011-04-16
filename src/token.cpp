@@ -60,6 +60,8 @@ void Token :: choose_type () {
         this->type = TOKEN_IF;
     else if (this->text == std::string("while"))
     	this->type = TOKEN_WHILE;
+    else if (this->text == std::string("int"))
+        this->type = TOKEN_INT;
     else if (this->valid_symbol_name(this->text))
         this->type = TOKEN_SYMBOL;
     else if (this->is_number(this->text))

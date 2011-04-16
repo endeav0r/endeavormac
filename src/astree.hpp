@@ -10,7 +10,9 @@
 enum { AST_ADD,
        AST_SUBTRACT,
        AST_EQUALS,
-       AST_LESS_THAN };
+       AST_LESS_THAN,
+       AST_GREATER_THAN,
+       AST_INT };
 
 
 class ASTree {
@@ -34,11 +36,32 @@ class ASTreeExprConstant : public ASTreeExpr {
 };
 
 
-class ASTreeExprSymbol : public ASTreeExpr {
+class ASTreeSymbol : public ASTree {
     private :
         std::string symbol;
     public :
-        ASTreeExprSymbol (std::string symbol);
+        ASTreeSymbol (std::string symbol);
+        void debug (int depth);
+};
+
+
+class ASTreeDecl : public ASTree {
+    private :
+        int type;
+    public :
+        ASTreeDecl (int type);
+        void debug (int depth);
+};
+
+
+class ASTreeExprVar : public ASTreeExpr {
+    private :
+        ASTreeSymbol * symbol;
+        ASTreeDecl   * decl;
+    public :
+        ASTreeExprVar ();
+        void s_symbol (ASTreeSymbol * symbol);
+        void s_decl   (ASTreeDecl   * decl);
         void debug (int depth);
 };
 
@@ -59,13 +82,13 @@ class ASTreeExprArithmetic : public ASTreeExpr {
 
 class ASTreeAssign : public ASTree {
     private :
-        ASTreeExprSymbol * left;
+        ASTreeExprVar * left;
         ASTreeExpr * right;
     public :
         ASTreeAssign ();
-        ASTreeAssign (ASTreeExprSymbol * left, ASTreeExpr * right);
+        ASTreeAssign (ASTreeExprVar * left, ASTreeExpr * right);
         ~ASTreeAssign ();
-        void s_left  (ASTreeExprSymbol * left);
+        void s_left  (ASTreeExprVar * left);
         void s_right (ASTreeExpr * right);
         void debug (int depth);
 };
@@ -118,10 +141,20 @@ class ASTreeIf : public ASTree {
         ~ASTreeIf ();
         void s_condition (ASTreeCondition * condition);
         void s_block     (ASTreeBlock     * block);
-        void debug(int depth);
+        void debug (int depth);
 };
 
 
+class ASTreeWhile : public ASTree {
+    private :
+        ASTreeCondition * condition;
+        ASTreeBlock * block;
+    public :
+        ~ASTreeWhile ();
+        void s_condition (ASTreeCondition * condition);
+        void s_block     (ASTreeBlock     * block);
+        void debug (int depth);
+};
 /*
  * because we use ASTree as our parser stack, we *cheat* here and create some
  * tree nodes that won't exist in the final tree, but will exist temporarily

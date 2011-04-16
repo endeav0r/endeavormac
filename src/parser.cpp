@@ -24,7 +24,9 @@ void Parser :: reduce () {
     int size;
     bool reduce = true;
     ASTreeAssign         * assign;
-    ASTreeExprSymbol     * symbol;
+    ASTreeSymbol         * symbol;
+    ASTreeDecl           * decl;
+    ASTreeExprVar        * var;
     ASTreeExpr           * expr;
     ASTreeExpr           * expr2;
     ASTreeExprArithmetic * arith;
@@ -32,10 +34,9 @@ void Parser :: reduce () {
     ASTreeStatement      * statement;
     ASTreeBlock          * block;
     ASTreeIf             * treeIf;
-    
+    ASTreeWhile          * treeWhile;
+
     std::list <ASTree *> :: iterator stack_it;
-    
-    
     
     while (reduce == true) {
         reduce = false;
@@ -60,11 +61,11 @@ void Parser :: reduce () {
                     break;
                 stack_it++;
                 
-                // symbol assign expr
-                if ((symbol = dynamic_cast<ASTreeExprSymbol *>(*stack_it))) {
-                    std::cout << "PARSER_REDUCE_SYMBOL_ASSIGN_EXPR\n";
+                // var assign expr
+                if ((var = dynamic_cast<ASTreeExprVar *>(*stack_it))) {
+                    std::cout << "PARSER_REDUCE_VAR_ASSIGN_EXPR\n";
                     assign->s_right(expr);
-                    assign->s_left(symbol);
+                    assign->s_left(var);
                     this->stack.pop_front();
                     this->stack.pop_front();
                     this->stack.pop_front();
@@ -180,8 +181,48 @@ void Parser :: reduce () {
                     this->stack.push_front(statement);
                     reduce = true;
                 }// if condition block
+                // while condition block
+                if ((treeWhile = dynamic_cast<ASTreeWhile *>(*stack_it))) {
+                    std::cout << "PARSE_REDUCE_WHILE_CONDITION_BLOCK\n";
+                    statement = new ASTreeStatement();
+                    treeWhile->s_condition(condition);
+                    treeWhile->s_block(block);
+                    statement->push_node(treeWhile);
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(statement);
+                    reduce = true;
+                } // while condition block
             } // condition block
         } // block
+        // symbol
+        else if ((symbol = dynamic_cast<ASTreeSymbol *>(*stack_it))) {
+            if (size == 1) {
+                var = new ASTreeExprVar();
+                var->s_symbol(symbol);
+                this->stack.pop_front();
+                this->stack.push_front(var);
+            }
+            else {
+                stack_it++;
+                // decl symbol
+                if ((decl = dynamic_cast<ASTreeDecl *>(*stack_it))) {
+                    var = new ASTreeExprVar();
+                    var->s_symbol(symbol);
+                    var->s_decl(decl);
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    this->stack.push_front(var);
+                } // symbol
+                else {
+                    var = new ASTreeExprVar();
+                    var->s_symbol(symbol);
+                    this->stack.pop_front();
+                    this->stack.push_front(var);
+                } // symbol
+            } // symbol
+        }
         // terminator
         else if ((dynamic_cast<ASTreeTerminator *>(*stack_it))) {
             std::cout << "PARSER_REDUCE_TERMINATOR\n";
@@ -211,7 +252,11 @@ void Parser :: parse () {
         switch (token.g_type()) {
             case TOKEN_SYMBOL :
                 std::cout << "PARSER_TOKEN_SYMBOL\n";
-                this->stack.push_front(new ASTreeExprSymbol(token.g_text()));
+                this->stack.push_front(new ASTreeSymbol(token.g_text()));
+                break;
+            case TOKEN_INT :
+                std::cout << "PARSER_TOKEN_INT\n";
+                this->stack.push_front(new ASTreeDecl(AST_INT));
                 break;
             case TOKEN_NUMBER :
                 std::cout << "PARSER_TOKEN_NUMBER\n";
@@ -238,12 +283,16 @@ void Parser :: parse () {
                 this->stack.push_front(new ASTreeExprArithmetic(AST_ADD));
                 break;
             case TOKEN_MINUS :
-                std::cout << "PARSER_TOKEN_PLUS\n";
+                std::cout << "PARSER_TOKEN_MINUS\n";
                 this->stack.push_front(new ASTreeExprArithmetic(AST_SUBTRACT));
                 break;
             case TOKEN_IF :
                 std::cout << "PARSER_IF\n";
                 this->stack.push_front(new ASTreeIf());
+                break;
+            case TOKEN_WHILE :
+                std::cout << "PARSER_WHILE\n";
+                this->stack.push_front(new ASTreeWhile());
                 break;
             case TOKEN_PAREN_OPEN :
                 std::cout << "PARSER_PAREN_OPEN\n";
