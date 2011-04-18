@@ -1,21 +1,16 @@
 #include "instruction.hpp"
 
 
-Instruction :: Instruction () {
-    this->OP = OP_NOP;
-}
+Instruction :: Instruction ()              { this->OP = OP_NOP; }
+Instruction :: Instruction (int operation) { this->OP = operation; }
 
 
-Instruction :: Instruction (int operation) {
-    this->OP = operation;
-}
-
-
-void Instruction :: s_RD  (int RD)  { this->RD  = RD;  }
-void Instruction :: s_RS1 (int RS1) { this->RS1 = RS1; }
-void Instruction :: s_RS2 (int RS2) { this->RS2 = RS2; }
-void Instruction :: s_IMM (int IMM) { this->IMM = IMM; }
+void Instruction :: s_RD      (int RD)              { this->RD  = RD;  }
+void Instruction :: s_RS1     (int RS1)             { this->RS1 = RS1; }
+void Instruction :: s_RS2     (int RS2)             { this->RS2 = RS2; }
+void Instruction :: s_IMM     (int IMM)             { this->IMM = IMM; }
 void Instruction :: s_COMMENT (std::string comment) { this->comment = comment; }
+void Instruction :: s_LABEL   (std::string label  ) { this->label = labe; }
 
 int Instruction :: g_OP () { return this->OP; }
 

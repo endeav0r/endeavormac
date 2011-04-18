@@ -1,7 +1,11 @@
 #ifndef assembler_HEADER
 #define assembler_HEADER
 
+#include <string>
+#include <list>
+
 #include "abstractsyntaxtree.hpp"
+#include "instruction.hpp"
 
 class Assembler {
 
@@ -29,9 +33,12 @@ class Assembler {
         // this is better than symbol_ld because it checks if the symbol is
         // already in a register first
         int symbol_to_register (std::string name);
-
+        
+        void 
+        
     public :
         Assembler (AbstractSyntaxTree tree);
+        void assemble();
 
 };
 
