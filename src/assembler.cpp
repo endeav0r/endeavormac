@@ -5,7 +5,7 @@ Assembler :: Assembler (AbstractSyntaxTree tree) {
 }
 
 
-void Parser :: push_register (int reg) {
+void Assembler :: push_register (int reg) {
     Instruction store(OP_ST);
     Instruction decrement(OP_ADDI);
     
@@ -20,7 +20,7 @@ void Parser :: push_register (int reg) {
 }
 
 
-void Parser :: pop_register (int reg) {
+void Assembler :: pop_register (int reg) {
     Instruction increment(OP_ADDI);
     Instruction load(OP_LD);
     
@@ -35,7 +35,7 @@ void Parser :: pop_register (int reg) {
 }
 
 
-void Parser :: load_immediate (int reg, int imm) {
+void Assembler :: load_immediate (int reg, int imm) {
     Instruction comment(OP_COMMENT);
     Instruction zero(OP_SUBX);
     Instruction sethi(OP_SETHI);
@@ -114,7 +114,7 @@ void Assembler :: bz (int imm) {
 }
 
 
-void Parser :: symbol_st (std::string name, int reg) {
+void Assembler :: symbol_st (std::string name, int reg) {
     Instruction comment(OP_COMMENT);
     Instruction st(OP_ST);
     int reg1, reg2;
@@ -154,7 +154,7 @@ void Parser :: symbol_st (std::string name, int reg) {
 }
 
 
-void Parser :: symbol_ld (std::string name, int reg) {
+void Assembler :: symbol_ld (std::string name, int reg) {
     Instruction comment(OP_COMMENT);
     Instruction ld(OP_LD);
     int reg1, reg2;
@@ -193,7 +193,7 @@ void Parser :: symbol_ld (std::string name, int reg) {
 }
 
 
-int Parser :: symbol_to_register (std::string name) {
+int Assembler :: symbol_to_register (std::string name) {
     int reg;
     Instruction comment(OP_COMMENT);
     Symbol & symbol = this->table.g_symbol(name);
@@ -212,4 +212,9 @@ int Parser :: symbol_to_register (std::string name) {
         this->symbol_ld(name, reg);
     }
     return reg;
+}
+
+void Assembler :: assemble () {
+    ASTree * tree = this->tree;
+    
 }

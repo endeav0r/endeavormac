@@ -320,5 +320,5 @@ void Parser :: parse () {
         }
         this->reduce();
     }
-    
+    this->stack.reverse();
 }

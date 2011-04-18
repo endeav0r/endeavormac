@@ -16,6 +16,8 @@ enum { AST_ADD,
 
 
 class ASTree {
+    protected :
+        std::string debug_space (int depth);
     public :
         virtual void debug (int depth);
 };
@@ -32,6 +34,7 @@ class ASTreeExprConstant : public ASTreeExpr {
         unsigned int constant;
     public :
         ASTreeExprConstant (unsigned int constant);
+        unsigned int g_constant ();
         void debug (int depth);
 };
 
@@ -41,6 +44,7 @@ class ASTreeSymbol : public ASTree {
         std::string symbol;
     public :
         ASTreeSymbol (std::string symbol);
+        std::string g_symbol ();
         void debug (int depth);
 };
 
@@ -50,6 +54,7 @@ class ASTreeDecl : public ASTree {
         int type;
     public :
         ASTreeDecl (int type);
+        int g_type ();
         void debug (int depth);
 };
 
@@ -62,6 +67,8 @@ class ASTreeExprVar : public ASTreeExpr {
         ASTreeExprVar ();
         void s_symbol (ASTreeSymbol * symbol);
         void s_decl   (ASTreeDecl   * decl);
+        ASTreeSymbol * g_symbol ();
+        ASTreeDecl   * g_decl   ();
         void debug (int depth);
 };
 
@@ -74,8 +81,11 @@ class ASTreeExprArithmetic : public ASTreeExpr {
         
     public :
         ASTreeExprArithmetic(int operation);
+        ~ASTreeExprArithmetic();
         void s_left  (ASTreeExpr * left);
         void s_right (ASTreeExpr * right);
+        ASTreeExpr * g_left  ();
+        ASTreeExpr * g_right ();
         void debug   (int depth);
 };
 
