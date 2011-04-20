@@ -7,6 +7,7 @@
 
 #include "astree.hpp"
 #include "instruction.hpp"
+#include "labelmaker.hpp"
 #include "symboltable.hpp"
 
 class Assembler {
@@ -15,6 +16,7 @@ class Assembler {
     
         std::list <Instruction *> instructions;
         
+        LabelMaker labelMaker;
         ASTree * tree;
         SymbolTable symbolTable;
         
@@ -40,10 +42,38 @@ class Assembler {
          * There are numerous cases for dealing with expressions. This case, the default
          * case, is for evaluating expressions and loading them into variables. This is
          * not for declaring variables, etc.
+         * @param expression the expression to evaluate
+         * @param force_load this will not check to see if a symbol is already
+         *                   contained in a register, and will force the loading
+         *                   of a symbol into a register (think loops)
          * @return a pointer to a register which has been marked used and will contain
          *         the value of the evaluated expression during runtime
          */
-        Register * expression (ASTreeExpr * expression);
+        Register * expression (ASTreeExpr * expression, bool force_load = false);
+        
+        /**
+         * Evaluates a condition and jumps to label_true if the condition is
+         * true, or label_false if the condition is false
+         * @param condition the condition to evaluate
+         * @param label_true the label to branch to if the condition is true
+         * @param label_false the label to branch to if the condition is false
+         */
+        void condition (ASTreeCondition * condition,
+                        std::string label_true,
+                        std::string label_false,
+                        bool force_load = false);
+        
+        /**
+         * Evaluates an if statement
+         * @param treeIf the if statement node in the ASTree
+         */
+        void treeIf (ASTreeIf * treeIf);
+        
+        /**
+         * Like treeIf there is no trickery here. behaves like it looks
+         * @param treeWhile the tree node in the ASTree
+         */
+        void treeWhile (ASTreeWhile * treeWhile);
         
         void assign (ASTreeAssign * assign);
         

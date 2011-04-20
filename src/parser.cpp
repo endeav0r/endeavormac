@@ -157,7 +157,7 @@ void Parser :: reduce () {
                     statement = new ASTreeStatement();
                     this->stack.pop_front();
                     while ((dynamic_cast<ASTreeStatement *>(this->stack.front()))) {
-                        statement->push_node(dynamic_cast<ASTree *>(this->stack.front()));
+                        statement->push_node_front(dynamic_cast<ASTree *>(this->stack.front()));
                         this->stack.pop_front();
                     }
                     this->stack.pop_front();
@@ -345,7 +345,7 @@ void Parser :: parse () {
     if (this->stack.size() > 1) {
         statement = new ASTreeStatement();
         while (this->stack.size() > 0) {
-            statement->push_node(this->stack.front());
+            statement->push_node_front(this->stack.front());
             this->stack.pop_front();
         }
         this->tree = statement;
