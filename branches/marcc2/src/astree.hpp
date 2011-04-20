@@ -125,10 +125,13 @@ class ASTreeCondition : public ASTree {
         ASTreeExpr * left;
         ASTreeExpr * right;
     public :
-        ASTreeCondition (int op);
+        ASTreeCondition  (int op);
         ~ASTreeCondition ();
-        void s_left (ASTreeExpr * left);
+        void s_left  (ASTreeExpr * left);
         void s_right (ASTreeExpr * right);
+        ASTreeExpr * g_left  ();
+        ASTreeExpr * g_right ();
+        int          g_op    ();
         void debug (int depth);
 };
 
@@ -141,6 +144,8 @@ class ASTreeIf : public ASTree {
         ~ASTreeIf ();
         void s_statement (ASTreeStatement * statement);
         void s_condition (ASTreeCondition * condition);
+        ASTreeStatement * g_statement ();
+        ASTreeCondition * g_condition ();
         void debug (int depth);
 };
 
@@ -153,6 +158,8 @@ class ASTreeWhile : public ASTree {
         ~ASTreeWhile ();
         void s_statement (ASTreeStatement * statement);
         void s_condition (ASTreeCondition * condition);
+        ASTreeStatement * g_statement ();
+        ASTreeCondition * g_condition ();
         void debug (int depth);
 };
 /*

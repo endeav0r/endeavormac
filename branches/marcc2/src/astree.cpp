@@ -51,7 +51,7 @@ void ASTreeExprArithmetic :: debug (int depth) {
     this->right->debug(depth + 1);
 }
 void ASTreeCondition :: debug (int depth) {
-    std::cout << depth << debug_space(depth) << "ASTreeCondition\n";
+    std::cout << depth << debug_space(depth) << "ASTreeCondition ";
     switch (this->op) {
         case AST_EQUALS :
             std::cout << "EQUALS\n";
@@ -182,6 +182,8 @@ ASTreeIf :: ~ASTreeIf () {
 
 void ASTreeIf :: s_condition (ASTreeCondition * condition) { this->condition = condition; }
 void ASTreeIf :: s_statement (ASTreeStatement * statement) { this->statement = statement; }
+ASTreeStatement * ASTreeIf :: g_statement () { return this->statement; }
+ASTreeCondition * ASTreeIf :: g_condition () { return this->condition; }
 
 ASTreeWhile :: ~ASTreeWhile () {
     delete this->condition;
@@ -190,6 +192,8 @@ ASTreeWhile :: ~ASTreeWhile () {
 
 void ASTreeWhile :: s_condition (ASTreeCondition * condition) { this->condition = condition; }
 void ASTreeWhile :: s_statement (ASTreeStatement * statement) { this->statement = statement; }
+ASTreeStatement * ASTreeWhile :: g_statement () { return this->statement; }
+ASTreeCondition * ASTreeWhile :: g_condition () { return this->condition; }
 
 ASTreeCondition :: ASTreeCondition (int op) {
     this->op = op;
@@ -204,3 +208,6 @@ ASTreeCondition :: ~ASTreeCondition () {
 
 void ASTreeCondition :: s_left  (ASTreeExpr * left)  { this->left = left; }
 void ASTreeCondition :: s_right (ASTreeExpr * right) { this->right = right; }
+ASTreeExpr * ASTreeCondition :: g_left  () { return this->left; }
+ASTreeExpr * ASTreeCondition :: g_right () { return this->right; }
+int          ASTreeCondition :: g_op    () { return this->op; }

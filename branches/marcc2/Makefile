@@ -5,8 +5,8 @@ BUILD_DIR = obj/
 SRC_DIR = src/
 
 marcc : assembler astree exception instruction lexer parser register symbol \
-        symboltable token
-	$(CPP) -Wall -g -o marcc $(SRC_DIR)marcc.cpp $(SRC_DIR)assembler.cpp \
+        symboltable token labelmaker
+	$(CPP) -Wall -g -o marcc $(SRC_DIR)marcc.cpp $(BUILD_DIR)assembler.o $(BUILD_DIR)labelmaker.o \
 	$(BUILD_DIR)exception.o $(BUILD_DIR)instruction.o $(BUILD_DIR)lexer.o $(BUILD_DIR)parser.o \
 	$(BUILD_DIR)astree.o $(BUILD_DIR)symboltable.o $(BUILD_DIR)token.o $(BUILD_DIR)symbol.o \
 	$(BUILD_DIR)register.o
@@ -23,6 +23,9 @@ exception : $(SRC_DIR)exception.cpp
 
 instruction : $(SRC_DIR)instruction.cpp
 	$(CPP) $(FLAGS) $(SRC_DIR)instruction.cpp -o $(BUILD_DIR)instruction.o
+
+labelmaker : $(SRC_DIR)labelmaker.cpp
+	$(CPP) $(FLAGS) $(SRC_DIR)labelmaker.cpp -o $(BUILD_DIR)labelmaker.o
 
 lexer : $(SRC_DIR)lexer.cpp
 	$(CPP) $(FLAGS) $(SRC_DIR)lexer.cpp -o $(BUILD_DIR)lexer.o

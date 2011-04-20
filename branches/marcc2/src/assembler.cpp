@@ -51,6 +51,112 @@ void Assembler :: declare (ASTreeExprVar * var) {
 }
 
 
+void Assembler :: condition (ASTreeCondition * condition,
+                             std::string label_true,
+                             std::string label_false,
+                             bool force_load) {
+    Instruction * instruction;
+    Register * left;
+    Register * right;
+    
+    // evaluate the right and left side
+    left = this->expression(condition->g_left());
+    right = this->expression(condition->g_right());
+    
+    // now what are we evaluating
+    switch (condition->g_op()) {
+        case AST_EQUALS :
+            instruction = new Instruction(OP_SUBX);
+            instruction->s_RD(left);
+            instruction->s_RS1(left);
+            instruction->s_RS2(right);
+            this->instructions.push_back(instruction);
+            instruction = new Instruction(OP_BZ);
+            instruction->s_LABEL(label_true);
+            this->instructions.push_back(instruction);
+            instruction = new Instruction(OP_BA);
+            instruction->s_LABEL(label_false);
+            this->instructions.push_back(instruction);
+            break;
+        case AST_LESS_THAN :
+            instruction = new Instruction(OP_SUBX);
+            instruction->s_RD(left);
+            instruction->s_RS1(left);
+            instruction->s_RS2(right);
+            this->instructions.push_back(instruction);
+            instruction = new Instruction(OP_BN);
+            instruction->s_LABEL(label_true);
+            this->instructions.push_back(instruction);
+            instruction = new Instruction(OP_BA);
+            instruction->s_LABEL(label_false);
+            this->instructions.push_back(instruction);
+            break;
+        default :
+            throw Exception ("assembler encountered unknown condition");
+    }
+    
+    left->free();
+    right->free();
+}
+
+    
+void Assembler :: treeIf (ASTreeIf * treeIf) {
+    Instruction * instruction;
+    std::string label_true;
+    std::string label_false;
+    
+    label_true  = this->labelMaker.label();
+    label_false = this->labelMaker.label();
+    
+    this->condition(treeIf->g_condition(), label_true, label_false);
+    
+    instruction = new Instruction(OP_LABEL);
+    instruction->s_LABEL(label_true);
+    this->instructions.push_back(instruction);
+    
+    this->statement(treeIf->g_statement());
+    
+    instruction = new Instruction(OP_LABEL);
+    instruction->s_LABEL(label_false);
+    this->instructions.push_back(instruction);
+}
+            
+    
+void Assembler :: treeWhile (ASTreeWhile * treeWhile) {
+    Instruction * instruction;
+    std::string label_true; // if condition is true
+    std::string label_false; // if condition is false
+    std::string label_jump; // jump back to beginning of while (it is a loop :p)
+    
+    label_true  = this->labelMaker.label();
+    label_false = this->labelMaker.label();
+    label_jump  = this->labelMaker.label();
+    
+    instruction = new Instruction(OP_LABEL);
+    instruction->s_LABEL(label_jump);
+    this->instructions.push_back(instruction);
+    
+    this->condition(treeWhile->g_condition(),
+                    label_true,
+                    label_false,
+                    true);
+    
+    instruction = new Instruction(OP_LABEL);
+    instruction->s_LABEL(label_true);
+    this->instructions.push_back(instruction);
+    
+    this->statement(treeWhile->g_statement());
+    
+    instruction = new Instruction(OP_BA);
+    instruction->s_LABEL(label_jump);
+    this->instructions.push_back(instruction);
+    
+    instruction = new Instruction(OP_LABEL);
+    instruction->s_LABEL(label_false);
+    this->instructions.push_back(instruction);
+}
+
+
 Register * Assembler :: variable_address (ASTreeExprVar * var) {
     std::cout << "variable_address\n";
     ASTreeSymbol * symbol;
@@ -58,6 +164,8 @@ Register * Assembler :: variable_address (ASTreeExprVar * var) {
     Instruction * instruction;
     
     symbol = var->g_symbol();
+    if (this->symbolTable.symbol_exists(symbol->g_symbol()) == false)
+        throw Exception("tried to get address of non-existant symbol");
     reg = this->symbolTable.get_free_register_ptr();
     reg->use();
     
@@ -74,11 +182,9 @@ Register * Assembler :: variable_address (ASTreeExprVar * var) {
     
     return reg;
 }
-    
-    
 
 
-Register * Assembler :: expression (ASTreeExpr * expression) {
+Register * Assembler :: expression (ASTreeExpr * expression, bool force_load) {
     std::cout << "expression\n";
     ASTreeExprArithmetic * arithmetic;
     ASTreeExprConstant * constant;
@@ -86,6 +192,7 @@ Register * Assembler :: expression (ASTreeExpr * expression) {
     ASTreeSymbol * treeSymbol;
     Instruction * instruction;
     Register * reg;
+    Register * reg2;
     Symbol * symbol;
     
     // if this is just a constant, put it in a register
@@ -105,12 +212,14 @@ Register * Assembler :: expression (ASTreeExpr * expression) {
         
         // let's make sure this symbol actualyl exists
         if (this->symbolTable.symbol_exists(treeSymbol->g_symbol()) == false)
-            throw Exception ("Tried to evaluate variable but symbol was not in symbol table");
+            throw Exception (std::string("Tried to evaluate variable but ")
+                                         + "symbol was not in symbol table:"
+                                         + treeSymbol->g_symbol());
         
         symbol = this->symbolTable.g_symbol_ptr(treeSymbol->g_symbol());
         // if this symbol is currently loaded into a register, then our job
         // becomes very easy
-        if (symbol->register_isset()) {
+        if ((symbol->register_isset()) && (! force_load)) {
             reg = symbol->g_register_ptr();
             reg->use();
             reg->s_symbol(symbol);
@@ -143,12 +252,12 @@ Register * Assembler :: expression (ASTreeExpr * expression) {
             default :
                 throw Exception("assembler found unknown arithmetic operation ");
         }
-        reg = this->expression(arithmetic->g_right());
-        instruction->s_RS2(reg);
-        reg->free();
         reg = this->expression(arithmetic->g_left());
         instruction->s_RD(reg);
         instruction->s_RS1(reg);
+        reg2 = this->expression(arithmetic->g_right());
+        instruction->s_RS2(reg2);
+        reg2->free();
         this->instructions.push_back(instruction);
         return reg;
     }
@@ -179,7 +288,7 @@ void Assembler :: assign (ASTreeAssign * assign) {
     this->instructions.push_back(instruction);
     
     // shouldn't need those registers anymore
-    rhs->free();;
+    rhs->free();
     lhs_address->free();
 }
     
@@ -198,6 +307,10 @@ void Assembler :: statement (ASTreeStatement * statement) {
             this->statement(dynamic_cast<ASTreeStatement *>(*node_it));
         else if (dynamic_cast<ASTreeAssign *>(*node_it))
             this->assign(dynamic_cast<ASTreeAssign *>(*node_it));
+        else if (dynamic_cast<ASTreeIf *>(*node_it))
+            this->treeIf(dynamic_cast<ASTreeIf *>(*node_it));
+        else if (dynamic_cast<ASTreeWhile *>(*node_it))
+            this->treeWhile(dynamic_cast<ASTreeWhile *>(*node_it));
     }
 }
 

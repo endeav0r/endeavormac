@@ -20,61 +20,64 @@ std::string Instruction :: assembly () {
     
     switch (this->OP) {
         case OP_NOP :
-            return "NOP";
+            return "\tNOP";
         case OP_SUBX :
-            out_string << "SUBX  r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
+            out_string << "\tSUBX  r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
             return out_string.str();
         case OP_ORX :
-            out_string << "ORX   r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
+            out_string << "\tORX   r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
             return out_string.str();
         case OP_JMP :
-            out_string << "JMP   r" << this->RS2->g_id();
+            out_string << "\tJMP   r" << this->RS2->g_id();
             return out_string.str();
         case OP_ADDX :
-            out_string << "ADDX  r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
+            out_string << "\tADDX  r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
             return out_string.str();
         case OP_ANDX :
-            out_string << "ANDX  r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
+            out_string << "\tANDX  r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
             return out_string.str();
         case OP_NOTX :
-            out_string << "NOTX  r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
+            out_string << "\tNOTX  r" << this->RD->g_id() << ", r" << this->RS1->g_id() << ", r" << this->RS2->g_id();
             return out_string.str();
         case OP_SRLX :
-            out_string << "SRLX  r" << this->RD->g_id() << ", r" << this->RS1->g_id();
+            out_string << "\tSRLX  r" << this->RD->g_id() << ", r" << this->RS1->g_id();
             return out_string.str();
         case OP_SLLX :
-            out_string << "SLLX  r" << this->RD->g_id() << ", r" << this->RS1->g_id();
+            out_string << "\tSLLX  r" << this->RD->g_id() << ", r" << this->RS1->g_id();
             return out_string.str();
         case OP_LD :
-            out_string << "LD    r" << this->RD->g_id() << ", [r" << this->RS1->g_id() << "]";
+            out_string << "\tLD    r" << this->RD->g_id() << ", [r" << this->RS1->g_id() << "]";
             return out_string.str();
         case OP_ST :
-            out_string << "ST    [r" << this->RD->g_id() << "], r" << this->RS1->g_id();
+            out_string << "\tST    [r" << this->RD->g_id() << "], r" << this->RS1->g_id();
             return out_string.str();
         case OP_HLT :
             return "HLT";
         case OP_RET :
             return "RET";
         case OP_ADDI :
-            out_string << "ADDI  r" << this->RD->g_id() << ", " << this->IMM;
+            out_string << "\tADDI  r" << this->RD->g_id() << ", " << this->IMM;
             return out_string.str();
         case OP_BA :
-            out_string << "BA    " << (this->IMM);
+            out_string << "\tBA    " << this->label;
             return out_string.str();
         case OP_BN :
-            out_string << "BN    " << this->IMM;
+            out_string << "\tBN    " << this->label;
             return out_string.str();
         case OP_BZ :
-            out_string << "BZ    " << this->IMM;
+            out_string << "\tBZ    " << this->label;
             return out_string.str();
         case OP_SETHI :
-            out_string << "SETHI r" << this->RD->g_id() << ", " << this->IMM;
+            out_string << "\tSETHI r" << this->RD->g_id() << ", " << this->IMM;
             return out_string.str();
         case OP_CALL :
-            out_string << "CALL  " << this->IMM;
+            out_string << "\tCALL  " << this->label;
             return out_string.str();
         case OP_COMMENT :
             out_string << "; " << this->comment;
+            return out_string.str();
+        case OP_LABEL :
+            out_string << this->label << ":";
             return out_string.str();
         default :
             throw Exception("Error creating assembly from instruction");

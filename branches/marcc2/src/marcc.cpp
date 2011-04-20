@@ -53,7 +53,13 @@ int test_input (std::string input) {
 
 int main () {
     
-    if (test_input("var = 7 + 4;"))
+    if (test_input("int var = 7 + 4;"))
+        return -1;
+    
+    if (test_input("int a = 7 + 4; int b = 2 + 9; if (a == b) { if (a == b) {}int c = 4; }"))
+        return -1;
+    
+    if (test_input("int i = 0; while (i < 5) { i = i + 1; }"))
         return -1;
     
     return 0;
