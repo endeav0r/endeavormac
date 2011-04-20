@@ -9,41 +9,31 @@ SymbolTable :: SymbolTable () {
     this->next = NULL;
     this->last = this;
     this->next_free_offset = 0;
+    
+    this->r0.s_id(0);
+    this->stack_pointer.s_id(REG_STACK_POINTER);
+    this->base_pointer.s_id(REG_BASE_POINTER);
 }
 
 
-int SymbolTable :: get_free_register () {
+Register * SymbolTable :: get_free_register_ptr () {
     int i;
     
     // first find a register without a symbol
     for (i = 0; i < GENERAL_PURPOSE_REGISTERS; i++) {
         if ((this->registers[i].g_free())
             && (this->registers[i].has_symbol() == false))
-            return i+1;
+            return &(this->registers[i]);
     }
     
     // find any free register
     for (i = 0; i < GENERAL_PURPOSE_REGISTERS; i++) {
         if ((this->registers[i].g_free())
             && (this->registers[i].has_symbol() == false))
-            return i+1;
+            return &(this->registers[i]);
     }
     throw Exception("no registers free");
-    return -1;
-}
-
-
-void SymbolTable :: use_register (int reg) {
-    if (! this->registers[reg - 1].g_free())
-        throw Exception("tried to use an already used register");
-    this->registers[reg - 1].use();
-}
-
-
-void SymbolTable :: free_register (int reg) {
-    if (this->registers[reg - 1].g_free())
-        throw Exception("tried to free already free register");
-    this->registers[reg - 1].free();
+    return NULL;
 }
 
 
@@ -72,21 +62,14 @@ void SymbolTable :: pop () {
 }
 
 
-int SymbolTable :: add_symbol (std::string name, bool absolute) {
-    if (! absolute) {
-        this->symbols[name] = Symbol(name);
-        this->symbols[name].s_absolute(false);
-        this->symbols[name].s_offset(this->next_free_offset);
-        this->next_free_offset++;
-        return 1;
-    }
-    return 0;
+void SymbolTable :: add_symbol (std::string name) {
+    this->last->symbols[name] = Symbol(name);
+    this->last->symbols[name].s_offset(this->last->next_free_offset);
+    this->last->next_free_offset++;
 }
 
     
 bool SymbolTable :: symbol_exists (std::string name) {
-    // is it in the last table, IE the stack table?
-    // static variables not implemented yet
     if (this->last->symbols.count(name) == 1)
         return true;
     return false;
@@ -94,16 +77,19 @@ bool SymbolTable :: symbol_exists (std::string name) {
 
 
 int        SymbolTable :: g_symbol_offset   (std::string name) {
-       	    return this->symbols[name].g_offset();   }
-       	
-bool       SymbolTable :: g_symbol_absolute (std::string name) {
-            return this->symbols[name].g_absolute(); }
+       	    return this->last->symbols[name].g_offset();   }
         
-int        SymbolTable :: g_symbol_address  (std::string name) {
-            return this->symbols[name].g_address();  }
-        
-Symbol &   SymbolTable :: g_symbol          (std::string name) {
-            return this->symbols[name];              }
+Symbol *   SymbolTable :: g_symbol_ptr      (std::string name) {
+            return &(this->last->symbols[name]);           }
 
 Register * SymbolTable :: g_register_ptr    (int reg) {
-			return &(this->registers[reg - 1]);      }
+			return &(this->registers[reg - 1]);            }
+
+Register * SymbolTable :: g_r0_ptr () {
+            return &(this->r0); }
+
+Register * SymbolTable :: g_base_pointer_ptr () {
+            return &(this->base_pointer); }
+
+Register * SymbolTable :: g_stack_pointer_ptr () {
+            return &(this->stack_pointer); }

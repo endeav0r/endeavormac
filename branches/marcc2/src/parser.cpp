@@ -3,12 +3,25 @@
 
 Parser :: Parser (std::list <Token> tokens) {
     this->tokens = tokens;
-    
     this->tokens_it = this->tokens.begin();
+    this->tree = NULL;
 }
 
 
-std::list <ASTree *> Parser :: g_tree () { return this->stack; }
+Parser :: ~Parser () {
+    std::list <ASTree *> :: iterator stack_it;
+    
+    for (stack_it = this->stack.begin();
+         stack_it != this->stack.end();
+         stack_it++) {
+        delete *stack_it;
+    }
+    if (this->tree != NULL)
+        delete this->tree;
+}
+
+
+ASTree * Parser :: g_tree () { return this->tree; }
 
 
 Token Parser :: g_next_token () {
@@ -32,7 +45,6 @@ void Parser :: reduce () {
     ASTreeExprArithmetic * arith;
     ASTreeCondition      * condition;
     ASTreeStatement      * statement;
-    ASTreeBlock          * block;
     ASTreeIf             * treeIf;
     ASTreeWhile          * treeWhile;
 
@@ -142,14 +154,14 @@ void Parser :: reduce () {
             while (stack_it != this->stack.end()) {
                 // { statements }
                 if ((dynamic_cast<ASTreeBlockOpen *>(*stack_it))) {
-                    block = new ASTreeBlock;
+                    statement = new ASTreeStatement();
                     this->stack.pop_front();
                     while ((dynamic_cast<ASTreeStatement *>(this->stack.front()))) {
-                        block->push_statement_front(dynamic_cast<ASTreeStatement *>(this->stack.front()));
+                        statement->push_node(dynamic_cast<ASTree *>(this->stack.front()));
                         this->stack.pop_front();
                     }
                     this->stack.pop_front();
-                    this->stack.push_front(block);
+                    this->stack.push_front(statement);
                     reduce = true;
                     break;
                 }
@@ -158,44 +170,44 @@ void Parser :: reduce () {
                 stack_it++;
             }
         }
-        // block
-        else if ((block = dynamic_cast<ASTreeBlock *>(*stack_it))) {
-            std::cout << "PARSE_REDUCE_BLOCK\n";
+        // statement
+        else if ((statement = dynamic_cast<ASTreeStatement *>(*stack_it))) {
+            std::cout << "PARSE_REDUCE_STATEMENT\n";
             if (size < 3)
                 continue;
             stack_it++;
-            // condition block
+            // condition statement
             if ((condition = dynamic_cast<ASTreeCondition *>(*stack_it))) {
-                std::cout << "PARSE_REDUCE_CONDITION_BLOCK\n";
+                std::cout << "PARSE_REDUCE_CONDITION_STATEMENT\n";
                 stack_it++;
-                // if condition block
+                // if condition statement
                 if ((treeIf = dynamic_cast<ASTreeIf *>(*stack_it))) {
-                    std::cout << "PARSE_REDUCE_IF_CONDITION_BLOCK\n";
-                    statement = new ASTreeStatement();
+                    std::cout << "PARSE_REDUCE_IF_CONDITION_STATEMENT\n";
                     treeIf->s_condition(condition);
-                    treeIf->s_block(block);
-                    statement->push_node_front(treeIf);
+                    treeIf->s_statement(statement);
                     this->stack.pop_front();
                     this->stack.pop_front();
+                    statement = new ASTreeStatement();
+                    statement->push_node(treeIf);
                     this->stack.pop_front();
                     this->stack.push_front(statement);
                     reduce = true;
-                }// if condition block
-                // while condition block
+                }// if condition statement
+                // while condition statement
                 if ((treeWhile = dynamic_cast<ASTreeWhile *>(*stack_it))) {
-                    std::cout << "PARSE_REDUCE_WHILE_CONDITION_BLOCK\n";
-                    statement = new ASTreeStatement();
+                    std::cout << "PARSE_REDUCE_WHILE_CONDITION_STATEMENT\n";
                     treeWhile->s_condition(condition);
-                    treeWhile->s_block(block);
+                    treeWhile->s_statement(statement);
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    statement = new ASTreeStatement();
                     statement->push_node(treeWhile);
                     this->stack.pop_front();
-                    this->stack.pop_front();
-                    this->stack.pop_front();
                     this->stack.push_front(statement);
                     reduce = true;
-                } // while condition block
-            } // condition block
-        } // block
+                } // while condition statement
+            } // condition statement
+        } // statement
         // symbol
         else if ((symbol = dynamic_cast<ASTreeSymbol *>(*stack_it))) {
             if (size == 1) {
@@ -244,11 +256,15 @@ void Parser :: reduce () {
 
 
 void Parser :: parse () {
+    ASTreeStatement * statement;
     Token token;
+    
     for (this->tokens_it  = this->tokens.begin();
          this->tokens_it != this->tokens.end();
          this->tokens_it++) {
+
         token = *(this->tokens_it);
+
         switch (token.g_type()) {
             case TOKEN_SYMBOL :
                 std::cout << "PARSER_TOKEN_SYMBOL\n";
@@ -318,7 +334,25 @@ void Parser :: parse () {
                 throw Exception("Invalid Token");
                 break;
         }
+        
         this->reduce();
+        
     }
-    this->stack.reverse();
+    
+    if (this->tree != NULL)
+        delete this->tree;
+    
+    if (this->stack.size() > 1) {
+        statement = new ASTreeStatement();
+        while (this->stack.size() > 0) {
+            statement->push_node(this->stack.front());
+            this->stack.pop_front();
+        }
+        this->tree = statement;
+    }
+    else if (this->stack.size() == 1) {
+        this->tree = this->stack.front();
+        this->stack.pop_front();
+    }
+    
 }

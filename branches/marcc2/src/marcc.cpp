@@ -2,15 +2,18 @@
 #include <string>
 #include <iostream>
 
+#include "assembler.hpp"
+#include "astree.hpp"
 #include "exception.hpp"
+#include "instruction.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
-#include "astree.hpp"
 
 
 int test_input (std::string input) {    
-    std::list <ASTree *> tree;
-    std::list <ASTree *> :: iterator tree_it;
+    std::list <Instruction *> instructions;
+    std::list <Instruction *> :: iterator instruction_it;
+    ASTree * tree;
     try {
         
         std::cout << "\nRUNNING TEST\n" << input << "\n";
@@ -22,9 +25,19 @@ int test_input (std::string input) {
         parser.parse();
         
         tree = parser.g_tree();
-        for (tree_it = tree.begin(); tree_it != tree.end(); tree_it++) {
-            (*tree_it)->debug(0);
+        tree->debug(0);
+        
+        Assembler assembler(parser.g_tree());
+        assembler.assemble();
+        
+        instructions = assembler.g_instructions();
+        for (instruction_it  = instructions.begin();
+             instruction_it != instructions.end();
+             instruction_it++) {
+            std::cout << (*instruction_it)->assembly() << "\n";
         }
+        
+        assembler.free_instructions();
         
         std::cout << "\n";
     }
@@ -41,15 +54,6 @@ int test_input (std::string input) {
 int main () {
     
     if (test_input("var = 7 + 4;"))
-        return -1;
-    
-    if (test_input("{var = 1 + 2 + (3 + 4);}"))
-        return -1;
-    
-    if (test_input("if (4 == 5) {a = 3;}"))
-        return -1;
-
-    if (test_input("int n = 0; while (n < 5) {n = n + 1; n = n + 2;}"))
         return -1;
     
     return 0;

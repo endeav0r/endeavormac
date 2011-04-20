@@ -12,32 +12,38 @@ class Symbol {
     
     private :
         std::string name;
-        bool absolute; // is this an absolute address, or relative to BP
-                       // IE is it static/global or in the scope of the
-                       // stack frame
-        int  address;  // address or offset based on value of absolute
-        int  offset;   // what's 4 bytes anyway, two names for clarity
+        int offset;   // offset from base pointer
         Register * reg;
 
     public :
         Symbol (std::string name);
         Symbol ();
 
+        /**
+         * @return true if the register pointer for this symbol is set, meaning
+         *         this symbol is currently loaded in that register. false
+         *         otherwise
+         */
 		bool register_isset ();
+        
+        /**
+         * Free register (this symbol no longer held in register)
+         */
 		void register_free  ();
 
-        std::string g_name     ();
-        bool        g_absolute ();
-        int         g_offset   ();
-        int         g_address  ();
-        int         g_register ();
+        std::string g_name              ();
+        int         g_offset            ();
+        Register *  g_register_ptr      ();
         
         void s_name     (std::string name);
-        void s_absolute (bool absolute);
         void s_offset   (int offset);
-        void s_address  (int address);
-        // sets this->reg to reg, and sets reg's symbol to this
-        void s_register (Register * reg);
+        
+        /**
+         * Sets this symbol's register to register, and sets this register's
+         * symbol to this symbol.
+         * @param reg The register this symbol is currently loaded into
+         */
+        void s_register_ptr (Register * reg);
         
         Symbol& operator= (Symbol symbol);
         

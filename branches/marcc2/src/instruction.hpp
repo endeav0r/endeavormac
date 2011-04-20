@@ -6,40 +6,40 @@
 #include <inttypes.h>
 
 #include "exception.hpp"
+#include "register.hpp"
 
-enum { OP_NOP,
-       OP_SUBX,
-       OP_ORX,
-       OP_JMP,
+enum { OP_ADDI,
        OP_ADDX,
        OP_ANDX,
-       OP_NOTX,
-       OP_SRLX,
-       OP_SLLX,
-       OP_LD,
-       OP_ST,
-       OP_HLT,
-       OP_RET,
-       OP_ADDI,
        OP_BA,
        OP_BN,
        OP_BZ,
-       OP_SETHI,
        OP_CALL,
+       OP_HLT,
+       OP_JMP,
+       OP_LD,
+       OP_NOP,
+       OP_NOTX,
+       OP_ORX,
+       OP_RET,
+       OP_SETHI,
+       OP_SLLX,
+       OP_SRLX,
+       OP_ST,
+       OP_SUBX,
+       // these are special "pseudo" instructions which are really more
+       // just assembler directives
        OP_COMMENT,
        OP_LABEL };
-
-#define REG_STACK_POINTER 7
-#define REG_BASE_POINTER  6
 
 class Instruction {
 
     private :
         int FORMAT;
         int OP;
-        int RD;
-        int RS1;
-        int RS2;
+        Register * RD;
+        Register * RS1;
+        Register  *RS2;
         std::string comment;
         std::string label;
         int IMM;
@@ -48,9 +48,9 @@ class Instruction {
         Instruction ();
         Instruction (int operation);
         
-        void s_RD  (int RD);
-        void s_RS1 (int RS1);
-        void s_RS2 (int RS2);
+        void s_RD  (Register * RD);
+        void s_RS1 (Register * RS1);
+        void s_RS2 (Register * RS2);
         void s_IMM (int IMM);
         void s_COMMENT (std::string comment);
         void s_LABEL   (std::string label);

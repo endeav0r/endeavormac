@@ -1,7 +1,5 @@
 #include "astree.hpp"
 
-int ASTreeBlock :: next_id = 0;
-
 std::string ASTree :: debug_space (int depth) {
     std::string space = "";
     while (depth--)
@@ -71,27 +69,19 @@ void ASTreeStatement :: debug (int depth) {
         (*it)->debug(depth + 1);
     }
 }
-void ASTreeBlock :: debug (int depth) {
-    std::cout << depth << debug_space(depth) 
-              << "ASTreeBlock " << this->id << "\n";
-    for (std::list <ASTreeStatement *> :: iterator it = this->statements.begin();
-         it != this->statements.end(); it++) {
-        (*it)->debug(depth + 1);
-    }
-}
 void ASTreeIf :: debug (int depth) {
     std::cout << depth << debug_space(depth) << "ASTreeIf\n";
     std::cout << depth << debug_space(depth) << "condition:\n";
     this->condition->debug(depth + 1);
-    std::cout << depth << debug_space(depth) << "block:\n";
-    this->block->debug(depth + 1);
+    std::cout << depth << debug_space(depth) << "statement:\n";
+    this->statement->debug(depth + 1);
 }
 void ASTreeWhile :: debug (int depth) {
     std::cout << depth << debug_space(depth) << "ASTreeWhile\n";
     std::cout << depth << debug_space(depth) << "condition:\n";
     this->condition->debug(depth + 1);
-    std::cout << depth << debug_space(depth) << "block:\n";
-    this->block->debug(depth + 1);
+    std::cout << depth << debug_space(depth) << "statement:\n";
+    this->statement->debug(depth + 1);
 }
 void ASTreeTerminator :: debug (int depth) { 
     std :: cout << depth << debug_space(depth) << "ASTreeTerminator\n"; }
@@ -106,10 +96,10 @@ void ASTreeBlockClose :: debug (int depth) {
          
          
 
-ASTreeExprConstant :: ASTreeExprConstant (unsigned int constant) {
+ASTreeExprConstant :: ASTreeExprConstant (int constant) {
     this->constant = constant;
 }
-unsigned int ASTreeExprConstant :: g_constant () { return this->constant; }
+int ASTreeExprConstant :: g_constant () { return this->constant; }
 
 ASTreeSymbol :: ASTreeSymbol (std::string symbol) { this->symbol = symbol; }
 std::string ASTreeSymbol :: g_symbol () { return this->symbol; }
@@ -140,8 +130,9 @@ ASTreeExprArithmetic :: ~ASTreeExprArithmetic () {
 
 void ASTreeExprArithmetic :: s_left  (ASTreeExpr * left)  { this->left = left; }
 void ASTreeExprArithmetic :: s_right (ASTreeExpr * right) { this->right = right; }
-ASTreeExpr * ASTreeExprArithmetic :: g_left  () { return this->left; }
-ASTreeExpr * ASTreeExprArithmetic :: g_right () { return this->right; }
+ASTreeExpr * ASTreeExprArithmetic :: g_left      () { return this->left; }
+ASTreeExpr * ASTreeExprArithmetic :: g_right     () { return this->right; }
+int          ASTreeExprArithmetic :: g_operation () { return this->operation; }
 
 ASTreeAssign :: ASTreeAssign () {
     this->left = NULL;
@@ -161,6 +152,9 @@ ASTreeAssign :: ~ ASTreeAssign () {
 
 void ASTreeAssign :: s_left  (ASTreeExprVar * left)  { this->left  = left; }
 void ASTreeAssign :: s_right (ASTreeExpr    * right) { this->right = right; }
+ASTreeExprVar * ASTreeAssign :: g_left  () { return this->left;  }
+ASTreeExpr    * ASTreeAssign :: g_right () { return this->right; }
+
 
 ASTreeStatement :: ~ASTreeStatement () {
     std::list <ASTree *> :: iterator it;
@@ -177,41 +171,25 @@ void ASTreeStatement :: push_node_front (ASTree * node) {
     this->nodes.push_front(node);
 }
 
-ASTreeBlock :: ASTreeBlock () {
-    this->id = ASTreeBlock :: next_id;
-    ASTreeBlock :: next_id++;
-}
+std::list <ASTree *> ASTreeStatement :: g_nodes () { return this->nodes; }
 
-ASTreeBlock :: ~ASTreeBlock () {
-    std::list <ASTreeStatement *> :: iterator it;
-    for (it = this->statements.begin(); it != this->statements.end(); it++) {
-        delete (*it);
-    }
-}
 
-void ASTreeBlock :: push_statement (ASTreeStatement * statement) {
-    this->statements.push_back(statement);
-}
 
 ASTreeIf :: ~ASTreeIf () {
     delete this->condition;
-    delete this->block;
+    delete this->statement;
 }
 
 void ASTreeIf :: s_condition (ASTreeCondition * condition) { this->condition = condition; }
-void ASTreeIf :: s_block     (ASTreeBlock * block)         { this->block = block; }
+void ASTreeIf :: s_statement (ASTreeStatement * statement) { this->statement = statement; }
 
 ASTreeWhile :: ~ASTreeWhile () {
     delete this->condition;
-    delete this->block;
+    delete this->statement;
 }
 
 void ASTreeWhile :: s_condition (ASTreeCondition * condition) { this->condition = condition; }
-void ASTreeWhile :: s_block     (ASTreeBlock * block)         { this->block = block; }
-
-void ASTreeBlock :: push_statement_front (ASTreeStatement * statement) {
-    this->statements.push_front(statement);
-}
+void ASTreeWhile :: s_statement (ASTreeStatement * statement) { this->statement = statement; }
 
 ASTreeCondition :: ASTreeCondition (int op) {
     this->op = op;
