@@ -4,13 +4,17 @@ CPP = g++
 BUILD_DIR = obj/
 SRC_DIR = src/
 
-marcc : exception instruction lexer parser astree register symbol symboltable token
-	$(CPP) -Wall -g -o marcc $(SRC_DIR)marcc.cpp \
+marcc : assembler astree exception instruction lexer parser register symbol \
+        symboltable token
+	$(CPP) -Wall -g -o marcc $(SRC_DIR)marcc.cpp $(SRC_DIR)assembler.cpp \
 	$(BUILD_DIR)exception.o $(BUILD_DIR)instruction.o $(BUILD_DIR)lexer.o $(BUILD_DIR)parser.o \
 	$(BUILD_DIR)astree.o $(BUILD_DIR)symboltable.o $(BUILD_DIR)token.o $(BUILD_DIR)symbol.o \
 	$(BUILD_DIR)register.o
 
 
+assembler : $(SRC_DIR)assembler.cpp
+	$(CPP) $(FLAGS) $(SRC_DIR)assembler.cpp -o $(BUILD_DIR)assembler.o
+	
 astree : $(SRC_DIR)astree.cpp
 	$(CPP) $(FLAGS) $(SRC_DIR)astree.cpp -o $(BUILD_DIR)astree.o
 

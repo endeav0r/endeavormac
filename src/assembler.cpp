@@ -1,220 +1,214 @@
 #include "assembler.hpp"
 
-Assembler :: Assembler (AbstractSyntaxTree tree) {
+Assembler :: Assembler (ASTree * tree) {
     this->tree = tree;
 }
 
 
-void Assembler :: push_register (int reg) {
-    Instruction store(OP_ST);
-    Instruction decrement(OP_ADDI);
+void Assembler :: free_instructions () {
+    std::list <Instruction *> :: iterator instruction_it;
     
-    store.s_RD(REG_STACK_POINTER);
-    store.s_RS1(reg);
-    
-    decrement.s_RD(REG_STACK_POINTER);
-    decrement.s_IMM((0x00000001 ^ 0xFFFFFFFF) + 1);
-    
-    this->instructions.push_back(store);
-    this->instructions.push_back(decrement);
-}
-
-
-void Assembler :: pop_register (int reg) {
-    Instruction increment(OP_ADDI);
-    Instruction load(OP_LD);
-    
-    increment.s_RD(REG_STACK_POINTER);
-    increment.s_IMM(0x00000001);
-    
-    load.s_RD(reg);
-    load.s_RS1(REG_STACK_POINTER);
-    
-    this->instructions.push_back(increment);
-    this->instructions.push_back(load);
-}
-
-
-void Assembler :: load_immediate (int reg, int imm) {
-    Instruction comment(OP_COMMENT);
-    Instruction zero(OP_SUBX);
-    Instruction sethi(OP_SETHI);
-    Instruction addi(OP_ADDI);
-    
-    comment.s_COMMENT("load_immediate");
-    
-    zero.s_RD(reg);
-    zero.s_RS1(reg);
-    zero.s_RS2(reg);
-    
-    sethi.s_RD(reg);
-    sethi.s_IMM((imm >> 8) & 0x000000FF);
-    
-    addi.s_RD(reg);
-    addi.s_IMM(imm & 0x000000FF);
-    
-    this->instructions.push_back(comment);
-    this->instructions.push_back(zero);
-    this->instructions.push_back(sethi);
-    this->instructions.push_back(addi);
-}
-
-
-void Assembler :: mov (int reg_dest, int reg_src) {
-    Instruction orx(OP_ORX);
-    
-    orx.s_RD(reg_dest);
-    orx.s_RS1(reg_src);
-    orx.s_RS2(0);
-    
-    this->instructions.push_back(orx);
-}
-
-
-void Assembler :: addx (int reg_dest, int reg_1, int reg_2) {
-    Instruction add(OP_ADDX);
-    
-    add.s_RD(reg_dest);
-    add.s_RS1(reg_1);
-    add.s_RS2(reg_2);
-    
-    this->instructions.push_back(add);
-}
-
-
-void Assembler :: subx (int reg_dest, int reg_1, int reg_2) {
-    Instruction sub(OP_SUBX);
-    
-    sub.s_RD(reg_dest);
-    sub.s_RS1(reg_1);
-    sub.s_RS2(reg_2);
-    
-    this->instructions.push_back(sub);
-}
-
-
-void Assembler :: bn (int imm) {
-    Instruction bn(OP_BN);
-    bn.s_IMM(imm);
-    this->instructions.push_back(bn);
-}
-
-
-void Assembler :: ba (int imm) {
-    Instruction ba(OP_BA);
-    ba.s_IMM(imm);
-    this->instructions.push_back(ba);
-}
-
-
-void Assembler :: bz (int imm) {
-    Instruction bz(OP_BZ);
-    bz.s_IMM(imm);
-    this->instructions.push_back(bz);
-}
-
-
-void Assembler :: symbol_st (std::string name, int reg) {
-    Instruction comment(OP_COMMENT);
-    Instruction st(OP_ST);
-    int reg1, reg2;
-    
-    Symbol & symbol = this->table.g_symbol(name);
-    symbol.s_register(this->table.g_register_ptr(reg));
-    
-    comment.s_COMMENT("symbol st");
-    // the value of symbol <name> is in <reg>, set it up make it so
-    this->table.g_symbol(name).s_register(this->table.g_register_ptr(reg));
-    
-    if (! this->table.symbol_exists(name))
-        throw Exception(std::string("tried to set symbol ") + name + " but it wasn't found");
-    
-    if (! this->table.g_symbol_absolute(name)) {
-        // we need a couple general purpose registers
-        reg1 = this->table.get_free_register();
-        this->table.use_register(reg1);
-        reg2 = this->table.get_free_register();
-        this->table.use_register(reg2);
-        
-        // reg1 gets symbol offset
-        // reg2 gets bp + reg1
-        // reg2 => the address of the symbol
-        this->load_immediate(reg1, this->table.g_symbol_offset(name));
-        
-        this->instructions.push_back(comment);
-        this->addx(reg2, reg1, REG_BASE_POINTER);
-        
-        st.s_RD(reg2);
-        st.s_RS1(reg);
-        this->instructions.push_back(st);
-        
-        this->table.free_register(reg1);
-        this->table.free_register(reg2);
+    for (instruction_it  = this->instructions.begin();
+         instruction_it != this->instructions.end();
+         instruction_it++) {
+        delete *instruction_it;
     }
 }
 
 
-void Assembler :: symbol_ld (std::string name, int reg) {
-    Instruction comment(OP_COMMENT);
-    Instruction ld(OP_LD);
-    int reg1, reg2;
-    
-    Symbol & symbol = this->table.g_symbol(name);
-    symbol.s_register(this->table.g_register_ptr(reg));
-    
-    comment.s_COMMENT("symbol ld");
-    
-    if (! this->table.symbol_exists(name))
-        throw Exception(std::string("tried to get symbol ") + name + " but it wasn't found");
-    
-    if (! this->table.g_symbol_absolute(name)) {
-        // set registers as used
-        reg1 = this->table.get_free_register();
-        this->table.use_register(reg1);
-        reg2 = this->table.get_free_register();
-        this->table.use_register(reg2);
-        
-        // put offset into reg1
-        this->load_immediate(reg1, this->table.g_symbol_offset(name));
-        
-        this->instructions.push_back(comment);
-        // add offset to base pointer, place in reg2
-        this->addx(reg2, reg1, REG_BASE_POINTER);
-        
-        // ld instruction, loading memory at reg2 into reg
-        ld.s_RD(reg);
-        ld.s_RS1(reg2);
-        this->instructions.push_back(ld);
-        
-        // free tmp registers
-        this->table.free_register(reg1);
-        this->table.free_register(reg2);
-    }
+/**
+ * loads the value immediate into Register * pointed to by reg
+ * @param reg A pointer to a register WHICH HAS ALREADY been marked as used
+ * @param immediate Value to load into register (these bits: 0x0000FFFF)
+ */
+void Assembler :: load_immediate (Register * reg, int immediate) {
+    std::cout << "load_immediate\n";
+    Instruction * instruction;
+    instruction = new Instruction(OP_SUBX);
+    instruction->s_RD(reg);
+    instruction->s_RS1(reg);
+    instruction->s_RS2(reg);
+    this->instructions.push_back(instruction);
+    instruction = new Instruction(OP_SETHI);
+    instruction->s_RD(reg);
+    instruction->s_IMM((immediate >> 8) & 0x000000FF);
+    this->instructions.push_back(instruction);
+    instruction = new Instruction(OP_ADDI);
+    instruction->s_RD(reg);
+    instruction->s_IMM(immediate & 0x000000FF);
+    this->instructions.push_back(instruction);
 }
 
 
-int Assembler :: symbol_to_register (std::string name) {
-    int reg;
-    Instruction comment(OP_COMMENT);
-    Symbol & symbol = this->table.g_symbol(name);
+void Assembler :: declare (ASTreeExprVar * var) {
+    std::cout << "declare\n";
+    ASTreeSymbol * symbol;
+    symbol = var->g_symbol();
+    // everything for now is just a 2 byte var
+    if (this->symbolTable.symbol_exists(symbol->g_symbol()))
+        throw Exception ("tried to declare already existing symbol");
+    this->symbolTable.add_symbol(symbol->g_symbol());
+}
+
+
+Register * Assembler :: variable_address (ASTreeExprVar * var) {
+    std::cout << "variable_address\n";
+    ASTreeSymbol * symbol;
+    Register * reg;
+    Instruction * instruction;
     
-    if (symbol.register_isset()) {
-        reg = symbol.g_register();
-        this->table.use_register(reg);
-        comment.s_COMMENT(std::string("symbol " + name + " in reg " + (char) ('0' + reg)));
-        this->instructions.push_back(comment);
-    }
-    else {
-        reg = this->table.get_free_register();
-        this->table.use_register(reg);
-        comment.s_COMMENT(std::string("loading symbol " + name + " into reg " + (char) ('0' + reg)));
-        this->instructions.push_back(comment);
-        this->symbol_ld(name, reg);
-    }
+    symbol = var->g_symbol();
+    reg = this->symbolTable.get_free_register_ptr();
+    reg->use();
+    
+    instruction = new Instruction(OP_ORX);
+    instruction->s_RD(reg);
+    instruction->s_RS1(this->symbolTable.g_base_pointer_ptr());
+    instruction->s_RS2(this->symbolTable.g_r0_ptr());
+    this->instructions.push_back(instruction);
+    
+    instruction = new Instruction(OP_ADDI);
+    instruction->s_RD(reg);
+    instruction->s_IMM(this->symbolTable.g_symbol_offset(symbol->g_symbol()));
+    this->instructions.push_back(instruction);
+    
     return reg;
 }
+    
+    
+
+
+Register * Assembler :: expression (ASTreeExpr * expression) {
+    std::cout << "expression\n";
+    ASTreeExprArithmetic * arithmetic;
+    ASTreeExprConstant * constant;
+    ASTreeExprVar * var;
+    ASTreeSymbol * treeSymbol;
+    Instruction * instruction;
+    Register * reg;
+    Symbol * symbol;
+    
+    // if this is just a constant, put it in a register
+    if ((constant = dynamic_cast<ASTreeExprConstant *>(expression))) {
+        reg = this->symbolTable.get_free_register_ptr();
+        reg->use();
+        this->load_immediate(reg, constant->g_constant());
+        return reg;
+    }
+    // if this is a variable, we need to do some symboltable stuff
+    else if ((var = dynamic_cast<ASTreeExprVar *>(expression))) {
+        treeSymbol = var->g_symbol();
+        
+        // this is not an appropriate place for variable declarations
+        if (var->g_decl() != NULL)
+            throw Exception ("Tried to evaluate variable declaration");
+        
+        // let's make sure this symbol actualyl exists
+        if (this->symbolTable.symbol_exists(treeSymbol->g_symbol()) == false)
+            throw Exception ("Tried to evaluate variable but symbol was not in symbol table");
+        
+        symbol = this->symbolTable.g_symbol_ptr(treeSymbol->g_symbol());
+        // if this symbol is currently loaded into a register, then our job
+        // becomes very easy
+        if (symbol->register_isset()) {
+            reg = symbol->g_register_ptr();
+            reg->use();
+            reg->s_symbol(symbol);
+            return reg;
+        }
+        else {
+            // find offset from base pointer
+            reg = this->variable_address(var);
+            
+            // load memory at that address into register
+            instruction = new Instruction(OP_LD);
+            instruction->s_RD(reg);
+            instruction->s_RS1(reg);
+            this->instructions.push_back(instruction);
+            
+            // link this register and symbol
+            symbol->s_register_ptr(reg);
+            
+            return reg;
+        }
+    }
+    else if ((arithmetic = dynamic_cast<ASTreeExprArithmetic *>(expression))) {
+        switch (arithmetic->g_operation()) {
+            case AST_ADD :
+                instruction = new Instruction(OP_ADDX);
+                break;
+            case AST_SUBTRACT :
+                instruction = new Instruction(OP_SUBX);
+                break;
+            default :
+                throw Exception("assembler found unknown arithmetic operation ");
+        }
+        reg = this->expression(arithmetic->g_right());
+        instruction->s_RS2(reg);
+        reg->free();
+        reg = this->expression(arithmetic->g_left());
+        instruction->s_RD(reg);
+        instruction->s_RS1(reg);
+        this->instructions.push_back(instruction);
+        return reg;
+    }
+    throw ("assembler could not evaluate expression");
+    return NULL;
+}
+
+
+void Assembler :: assign (ASTreeAssign * assign) {
+    std::cout << "assign\n";
+    Instruction * instruction;
+    Register * rhs;
+    Register * lhs_address;
+    
+    // if this is a declaration, let's declare that variable
+    if (assign->g_left()->g_decl() != NULL)
+        this->declare(assign->g_left());
+    
+    // now we need to evaluate the rhs and place it in a register
+    rhs = this->expression(assign->g_right());
+    
+    // and get the address to where we're going to store the lhs
+    lhs_address = this->variable_address(assign->g_left());
+    
+    instruction = new Instruction(OP_ST);
+    instruction->s_RD(lhs_address);
+    instruction->s_RS1(rhs);
+    this->instructions.push_back(instruction);
+    
+    // shouldn't need those registers anymore
+    rhs->free();;
+    lhs_address->free();
+}
+    
+
+void Assembler :: statement (ASTreeStatement * statement) {
+    std::cout << "statement\n";
+    std::list <ASTree *> nodes;
+    std::list <ASTree *> :: iterator node_it;
+    
+    nodes = statement->g_nodes();
+    
+    for (node_it  = nodes.begin();
+         node_it != nodes.end();
+         node_it++) {
+        if (dynamic_cast<ASTreeStatement *>(*node_it))
+            this->statement(dynamic_cast<ASTreeStatement *>(*node_it));
+        else if (dynamic_cast<ASTreeAssign *>(*node_it))
+            this->assign(dynamic_cast<ASTreeAssign *>(*node_it));
+    }
+}
+
 
 void Assembler :: assemble () {
-    ASTree * tree = this->tree;
-    
+    std::cout << "assemble\n";
+    if (dynamic_cast<ASTreeStatement *>(this->tree))
+        this->statement(dynamic_cast<ASTreeStatement *>(this->tree));
+    else
+        throw Exception("assembly tree wasn't statement");
 }
+
+std::list <Instruction *> Assembler :: g_instructions () {
+    return this->instructions; }

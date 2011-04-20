@@ -20,6 +20,8 @@ class Parser {
         // (we're not creating no stinking state table)
         std::list <ASTree *> stack;
         
+        ASTree * tree;
+        
         std::list <Token> tokens;
         std::list <Token> :: iterator tokens_it;
         Token g_next_token();
@@ -28,9 +30,10 @@ class Parser {
     
     public :
         Parser (std::list <Token> tokens);
+        ~Parser ();
         
         void     parse ();
-        std::list <ASTree *> g_tree ();
+        ASTree * g_tree ();
         
 };
 

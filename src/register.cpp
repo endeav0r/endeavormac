@@ -14,10 +14,16 @@ Register :: Register () {
 }
 
 void Register :: free () {
+    std::cout << "register " << this->id << " free\n";
+    if (this->bool_free)
+        throw Exception("tried to free free register");
 	this->bool_free = true;
 }
 
 void Register :: use () { 
+    std::cout << "register " << this->id << " use\n";
+    if (! this->bool_free)
+        throw Exception("tried to use used register");
 	this->bool_free = false;
 	if (this->symbol != NULL) {
 		this->symbol->register_free();
