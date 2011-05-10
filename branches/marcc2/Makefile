@@ -4,16 +4,16 @@ CPP = g++
 BUILD_DIR = obj/
 SRC_DIR = src/
 
-marcc : assembler astree exception instruction lexer parser register symbol \
-        symboltable token labelmaker
-	$(CPP) -Wall -g -o marcc $(SRC_DIR)marcc.cpp $(BUILD_DIR)assembler.o $(BUILD_DIR)labelmaker.o \
+marcc : astree compiler exception instruction lexer parser register symbol \
+        symboltable token labelmaker memorydefinition
+	$(CPP) -Wall -g -o marcc $(SRC_DIR)marcc.cpp $(BUILD_DIR)compiler.o $(BUILD_DIR)labelmaker.o \
 	$(BUILD_DIR)exception.o $(BUILD_DIR)instruction.o $(BUILD_DIR)lexer.o $(BUILD_DIR)parser.o \
 	$(BUILD_DIR)astree.o $(BUILD_DIR)symboltable.o $(BUILD_DIR)token.o $(BUILD_DIR)symbol.o \
-	$(BUILD_DIR)register.o
+	$(BUILD_DIR)register.o $(BUILD_DIR)memorydefinition.o
 
 
-assembler : $(SRC_DIR)assembler.cpp
-	$(CPP) $(FLAGS) $(SRC_DIR)assembler.cpp -o $(BUILD_DIR)assembler.o
+compiler : $(SRC_DIR)compiler.cpp
+	$(CPP) $(FLAGS) $(SRC_DIR)compiler.cpp -o $(BUILD_DIR)compiler.o
 	
 astree : $(SRC_DIR)astree.cpp
 	$(CPP) $(FLAGS) $(SRC_DIR)astree.cpp -o $(BUILD_DIR)astree.o
@@ -29,6 +29,9 @@ labelmaker : $(SRC_DIR)labelmaker.cpp
 
 lexer : $(SRC_DIR)lexer.cpp
 	$(CPP) $(FLAGS) $(SRC_DIR)lexer.cpp -o $(BUILD_DIR)lexer.o
+
+memorydefinition : $(SRC_DIR)memorydefinition.cpp
+	$(CPP) $(FLAGS) $(SRC_DIR)memorydefinition.cpp -o $(BUILD_DIR)memorydefinition.o
 
 parser : $(SRC_DIR)parser.cpp
 	$(CPP) $(FLAGS) $(SRC_DIR)parser.cpp -o $(BUILD_DIR)parser.o

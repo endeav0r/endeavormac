@@ -5,10 +5,12 @@
 #include <list>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 
 enum { AST_ADD,
        AST_SUBTRACT,
+       AST_MULTIPLY,
        AST_EQUALS,
        AST_LESS_THAN,
        AST_GREATER_THAN,
@@ -24,8 +26,22 @@ class ASTree {
 
        
 class ASTreeExpr : public ASTree {
+    protected :
+        ASTreeExpr   * expr; // this is what follows the expr in []
+                             // IE: expr[expr]
+        int reference_count; // this is how we deal with pointers/references
+                             // for parser: 
+                             //   & should increase the reference count by 1
+                             //   * should decrease the reference count by 1
     public :
+        ASTreeExpr ();
         virtual void debug (int depth);
+        void reference   ();
+        void dereference ();
+        int  g_reference_count ();
+        void s_expr (ASTreeExpr * expr);
+        ASTreeExpr * g_expr ();
+        virtual std::string g_comment ();
 };
 
 
@@ -36,6 +52,18 @@ class ASTreeExprConstant : public ASTreeExpr {
         ASTreeExprConstant (int constant);
         int g_constant ();
         void debug (int depth);
+        std::string g_comment ();
+};
+
+
+class ASTreeExprString : public ASTreeExpr {
+    private :
+        std::string string;
+    public :
+        ASTreeExprString (std::string);
+        std::string g_string ();
+        void debug (int depth);
+        std::string g_comment ();
 };
 
 
@@ -46,6 +74,7 @@ class ASTreeSymbol : public ASTree {
         ASTreeSymbol (std::string symbol);
         std::string g_symbol ();
         void debug (int depth);
+        std::string g_comment ();
 };
 
 
@@ -56,6 +85,7 @@ class ASTreeDecl : public ASTree {
         ASTreeDecl (int type);
         int g_type ();
         void debug (int depth);
+        std::string g_comment ();
 };
 
 
@@ -70,6 +100,7 @@ class ASTreeExprVar : public ASTreeExpr {
         ASTreeSymbol * g_symbol ();
         ASTreeDecl   * g_decl   ();
         void debug (int depth);
+        std::string g_comment();
 };
 
 
@@ -88,6 +119,7 @@ class ASTreeExprArithmetic : public ASTreeExpr {
         ASTreeExpr * g_right ();
         int g_operation ();
         void debug   (int depth);
+        std::string g_comment ();
 };
 
 
@@ -104,6 +136,7 @@ class ASTreeAssign : public ASTree {
         ASTreeExprVar * g_left  ();
         ASTreeExpr    * g_right ();
         void debug (int depth);
+        std::string g_comment ();
 };
 
 
@@ -133,6 +166,7 @@ class ASTreeCondition : public ASTree {
         ASTreeExpr * g_right ();
         int          g_op    ();
         void debug (int depth);
+        std::string g_comment ();
 };
 
 
@@ -147,6 +181,7 @@ class ASTreeIf : public ASTree {
         ASTreeStatement * g_statement ();
         ASTreeCondition * g_condition ();
         void debug (int depth);
+        std::string g_comment ();
 };
 
 
@@ -161,6 +196,7 @@ class ASTreeWhile : public ASTree {
         ASTreeStatement * g_statement ();
         ASTreeCondition * g_condition ();
         void debug (int depth);
+        std::string g_comment ();
 };
 /*
  * because we use ASTree as our parser stack, we *cheat* here and create some
@@ -168,11 +204,15 @@ class ASTreeWhile : public ASTree {
  * on the parser stack in order to save state
  */
  
-class ASTreeTerminator : public ASTree { public : void debug (int depth); };
-class ASTreeParenOpen  : public ASTree { public : void debug (int depth); };
-class ASTreeParenClose : public ASTree { public : void debug (int depth); };
-class ASTreeBlockOpen  : public ASTree { public : void debug (int depth); };
-class ASTreeBlockClose : public ASTree { public : void debug (int depth); };
+class ASTreeTerminator   : public ASTree { public : void debug (int depth); };
+class ASTreeParenOpen    : public ASTree { public : void debug (int depth); };
+class ASTreeParenClose   : public ASTree { public : void debug (int depth); };
+class ASTreeBlockOpen    : public ASTree { public : void debug (int depth); };
+class ASTreeBlockClose   : public ASTree { public : void debug (int depth); };
+class ASTreeBracketOpen  : public ASTree { public : void debug (int depth); };
+class ASTreeBracketClose : public ASTree { public : void debug (int depth); };
+class ASTreeStar         : public ASTree { public : void debug (int depth); };
+class ASTreeAmpersand    : public ASTree { public : void debug (int depth); };
 
 
 #endif

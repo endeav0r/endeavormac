@@ -27,6 +27,7 @@ enum { OP_ADDI,
        OP_SRLX,
        OP_ST,
        OP_SUBX,
+       OP_LDI,
        // these are special "pseudo" instructions which are really more
        // just assembler directives
        OP_COMMENT,
@@ -39,7 +40,7 @@ class Instruction {
         int OP;
         Register * RD;
         Register * RS1;
-        Register  *RS2;
+        Register * RS2;
         std::string comment;
         std::string label;
         int IMM;

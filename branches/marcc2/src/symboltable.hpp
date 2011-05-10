@@ -63,7 +63,7 @@ class SymbolTable {
          * SymbolTable), and then reserves space for the variable on the stack
          * @param name the name of the new symbol
          */
-        void add_symbol (std::string name);
+        void add_symbol (std::string name, int stack_space = 1);
         
         /**
          * Tells us if a symbol exists in the last (current) SymbolTable

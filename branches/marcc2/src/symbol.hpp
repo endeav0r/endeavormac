@@ -6,6 +6,8 @@
 #include "exception.hpp"
 #include "register.hpp"
 
+enum { SYMBOL_TYPE_INT };
+
 class Register;
 
 class Symbol {

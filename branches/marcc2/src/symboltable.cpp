@@ -62,10 +62,10 @@ void SymbolTable :: pop () {
 }
 
 
-void SymbolTable :: add_symbol (std::string name) {
+void SymbolTable :: add_symbol (std::string name, int stack_space) {
     this->last->symbols[name] = Symbol(name);
-    this->last->symbols[name].s_offset(this->last->next_free_offset);
-    this->last->next_free_offset++;
+    this->last->symbols[name].s_offset(this->last->next_free_offset + stack_space);
+    this->last->next_free_offset += stack_space;
 }
 
     
