@@ -66,7 +66,7 @@ int test_input (std::string input) {
 int main () {
     char buf[10240];
     std::ifstream file;
-        /*
+    
     if (test_input("int var = 7 + 4;"))
         return -1;
     
@@ -81,14 +81,14 @@ int main () {
 
     if (test_input("int keystream[256]; int i = 0; while (i < 256) { keystream[i] = i; i = i + 1; }"))
         return -1;
-            */
+    /*
     file.open("tests/rc4.mc", std::ifstream::in);
     file.read(buf, 10240);
     file.close();
     std::cout << buf;
     if (test_input(buf))
         return -1;
-    
+    */
 
     return 0;
     
