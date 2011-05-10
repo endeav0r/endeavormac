@@ -18,6 +18,9 @@ void ASTreeSymbol :: debug (int depth) {
 void ASTreeExprConstant :: debug (int depth) {
     std::cout << depth << debug_space(depth)
               << "ASTreeExprConstant " << this->constant << "\n"; }
+void ASTreeExprString :: debug (int depth) {
+    std::cout << depth << debug_space(depth)
+              << "ASTreeExprString " << this->string << "\n"; }
 void ASTreeAssign :: debug (int depth) {
     std::cout << depth << debug_space(depth) << "ASTreeExprAssign\n";
     std::cout << depth << debug_space(depth) << "LHS:\n";
@@ -37,6 +40,10 @@ void ASTreeExprVar :: debug (int depth) {
         std::cout << depth << debug_space(depth) << "decl:\n";
         this->decl->debug(depth + 1);
     }
+    if (this->expr != NULL) {
+        std::cout << depth << debug_space(depth) << "expr:\n";
+        this->expr->debug(depth + 1);
+    }
 }
 void ASTreeExprArithmetic :: debug (int depth) {
     std::cout << depth << debug_space(depth) << "ASTreeArithmetic ";
@@ -55,6 +62,12 @@ void ASTreeCondition :: debug (int depth) {
     switch (this->op) {
         case AST_EQUALS :
             std::cout << "EQUALS\n";
+            break;
+        case AST_LESS_THAN :
+            std::cout << "LESS_THAN\n";
+            break;
+        case AST_GREATER_THAN :
+            std::cout << "GREATER_THAN\n";
             break;
     }
     std::cout << depth << debug_space(depth) << "left\n";
@@ -93,19 +106,111 @@ void ASTreeBlockOpen :: debug (int depth) {
     std :: cout << depth << debug_space(depth) << "ASTreeBlockOpen\n"; }
 void ASTreeBlockClose :: debug (int depth) {
     std :: cout << depth << debug_space(depth) << "ASTreeBlockClose\n"; }
+void ASTreeBracketOpen :: debug (int depth) { 
+    std :: cout << depth << debug_space(depth) << "ASTreeBracketOpen\n"; }
+void ASTreeBracketClose :: debug (int depth) {
+    std :: cout << depth << debug_space(depth) << "ASTreeBracketClose\n"; }
+void ASTreeStar :: debug (int depth) {
+    std :: cout << depth << debug_space(depth) << "ASTreeStar\n"; }
+void ASTreeAmpersand :: debug (int depth) {
+    std :: cout << depth << debug_space(depth) << "ASTreeAmpersand\n"; }
          
-         
+
+std::string ASTreeSymbol :: g_comment () { return this->symbol; }
+std::string ASTreeExprConstant :: g_comment () {
+    std::stringstream stream;
+    stream << this->constant;
+    return stream.str();
+}
+std::string ASTreeExpr :: g_comment () { return "expression"; }
+std::string ASTreeDecl :: g_comment () {
+    switch (type) {
+        case AST_INT :
+            return "int";
+    }
+    return "decl";
+}
+std::string ASTreeExprVar :: g_comment () {
+    std::string comment;
+    if (this->decl != NULL)
+        comment = this->decl->g_comment() + " ";
+    comment += this->symbol->g_comment();
+    if (this->expr != NULL)
+        comment += "[" + this->expr->g_comment() + "]";
+    return comment;
+}
+std::string ASTreeExprString :: g_comment () {
+    return std::string("\"") + this->string + "\"";
+}
+std::string ASTreeExprArithmetic :: g_comment () {
+    std::string comment;
+    comment = this->left->g_comment();
+    switch (this->operation) {
+        case AST_ADD :
+            comment += " + ";
+            break;
+        case AST_SUBTRACT :
+            comment += " - ";
+            break;
+    }
+    comment += this->right->g_comment();
+    return comment;
+}
+std::string ASTreeAssign :: g_comment () {
+    return this->left->g_comment() + " = " + this->right->g_comment();
+}
+std::string ASTreeCondition :: g_comment () {
+    std::string comment;
+    comment = this->left->g_comment();
+    switch (this->op) {
+        case AST_EQUALS :
+            comment += " = ";
+            break;
+        case AST_LESS_THAN :
+            comment += " < ";
+            break;
+        case AST_GREATER_THAN :
+            comment += " > ";
+            break;
+    }
+    comment += this->right->g_comment();
+    return comment;
+}
+std::string ASTreeIf :: g_comment () {
+    return "if (" + this->condition->g_comment() + ")";
+}
+std::string ASTreeWhile :: g_comment () {
+    return "while (" + this->condition->g_comment() + ")";
+}
+
+
 
 ASTreeExprConstant :: ASTreeExprConstant (int constant) {
     this->constant = constant;
 }
 int ASTreeExprConstant :: g_constant () { return this->constant; }
 
+
+
+ASTreeExprString :: ASTreeExprString (std::string string) {
+    this->string = string; }
+std::string ASTreeExprString :: g_string() { return this->string; }
+
+
 ASTreeSymbol :: ASTreeSymbol (std::string symbol) { this->symbol = symbol; }
-std::string ASTreeSymbol :: g_symbol () { return this->symbol; }
+std::string ASTreeSymbol :: g_symbol  () { return this->symbol; }
 
 ASTreeDecl :: ASTreeDecl (int type) { this->type = type; }
 int ASTreeDecl :: g_type () { return this->type; }
+
+
+ASTreeExpr :: ASTreeExpr () { this->expr = NULL; this->reference_count = 0; }
+void         ASTreeExpr :: s_expr (ASTreeExpr   * expr) { this->expr = expr; }
+ASTreeExpr * ASTreeExpr :: g_expr () { return this->expr; }
+void ASTreeExpr :: reference () { this->reference_count++; }
+void ASTreeExpr :: dereference () { this->reference_count--; }
+int  ASTreeExpr :: g_reference_count () { return this->reference_count; }
+
 
 ASTreeExprVar :: ASTreeExprVar () {
     this->symbol = NULL;
@@ -116,6 +221,7 @@ void ASTreeExprVar :: s_symbol (ASTreeSymbol * symbol) { this->symbol = symbol; 
 void ASTreeExprVar :: s_decl   (ASTreeDecl   * decl  ) { this->decl   = decl;   }
 ASTreeSymbol * ASTreeExprVar :: g_symbol () { return this->symbol; }
 ASTreeDecl   * ASTreeExprVar :: g_decl   () { return this->decl;   }
+
 
 ASTreeExprArithmetic :: ASTreeExprArithmetic (int operation) {
     this->operation = operation;
@@ -133,6 +239,7 @@ void ASTreeExprArithmetic :: s_right (ASTreeExpr * right) { this->right = right;
 ASTreeExpr * ASTreeExprArithmetic :: g_left      () { return this->left; }
 ASTreeExpr * ASTreeExprArithmetic :: g_right     () { return this->right; }
 int          ASTreeExprArithmetic :: g_operation () { return this->operation; }
+
 
 ASTreeAssign :: ASTreeAssign () {
     this->left = NULL;

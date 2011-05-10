@@ -57,17 +57,19 @@ void Parser :: reduce () {
         if (size == 0)
             break;
             
-        // expr [ ( ]
+        // expr [ ( \[ ]
         if (((expr = dynamic_cast<ASTreeExpr *>(*stack_it)))
-            && (this->g_next_token().g_type() != TOKEN_PAREN_OPEN)) {
+            && (this->g_next_token().g_type() != TOKEN_PAREN_OPEN)
+            && (this->g_next_token().g_type() != TOKEN_BRACKET_OPEN)) {
             std::cout << "PARSER_REDUCE_EXPR\n";
             if (size == 1)
                 break;
             stack_it++;
             
-            // assign expr [ + ]
+            // assign expr [ + - ]
             if (((assign = dynamic_cast<ASTreeAssign *>(*stack_it)))
-                && (this->g_next_token().g_type() != TOKEN_PLUS)) {
+                && (this->g_next_token().g_type() != TOKEN_PLUS)
+                && (this->g_next_token().g_type() != TOKEN_MINUS)) {
                 std::cout << "PARSER_REDUCE_ASSIGN_EXPR\n";
                 if (size == 2)
                     break;
@@ -86,16 +88,16 @@ void Parser :: reduce () {
                 } // symbol assign expr
             } // assign expr [ + ]
             
-            // add expr
+            // arith expr
             else if ((arith = dynamic_cast<ASTreeExprArithmetic *>(*stack_it))) {
-                std::cout << "PARSER_REDUCE_ADD_EXPR\n";
+                std::cout << "PARSER_REDUCE_ARITH_EXPR\n";
                 if (size == 2)
                     break;
                 stack_it++;
                 
-                // expr add expr
+                // expr arith expr
                 if ((dynamic_cast<ASTreeExpr *>(*stack_it))) {
-                    std::cout << "PARSER_REDUCE_EXPR_ADD_EXPR\n";
+                    std::cout << "PARSER_REDUCE_EXPR_ARITH_EXPR\n";
                     arith->s_right(expr);
                     arith->s_left(dynamic_cast<ASTreeExpr *>(*stack_it));
                     this->stack.pop_front();
@@ -103,9 +105,47 @@ void Parser :: reduce () {
                     this->stack.pop_front();
                     this->stack.push_front(arith);
                     reduce = true;
-                } // expr add expr
-            } // add expr
-        } // expr [ ( ]
+                } // expr arith expr
+            } // arith expr
+            // star expr
+            else if (dynamic_cast<ASTreeStar *>(*stack_it)) {
+                if (size < 3) {
+                    std::cout << "PARSER_REDUCE_STAR_EXPR DEREF_1\n";
+                    expr->dereference();
+                    this->stack.pop_front();
+                    delete this->stack.front();
+                    this->stack.pop_front();
+                    this->stack.push_front(expr);
+                }
+                // expr star expr
+                else if ((expr2 = dynamic_cast<ASTreeExpr *>(*stack_it))) {
+                    this->stack.pop_front();
+                    delete this->stack.front();
+                    this->stack.pop_front();
+                    this->stack.pop_front();
+                    arith = new ASTreeExprArithmetic(AST_MULTIPLY);
+                    arith->s_left(expr2);
+                    arith->s_right(expr);
+                    this->stack.push_front(arith);
+                }
+                else {
+                    std::cout << "PARSER_REDUCE_STAR_EXPR DEREF_2\n";
+                    expr->dereference();
+                    this->stack.pop_front();
+                    delete this->stack.front();
+                    this->stack.pop_front();
+                    this->stack.push_front(expr);
+                }
+                reduce = true;
+            }// star expr
+            // ampersand expr
+            else if (dynamic_cast<ASTreeStar *>(*stack_it)) {
+                expr->reference();
+                this->stack.pop_front();
+                this->stack.pop_front();
+                this->stack.push_front(expr);
+            }
+        } // expr [ ( \] ]
         
         // )
         else if ((dynamic_cast<ASTreeParenClose *>(*stack_it))) {
@@ -136,10 +176,12 @@ void Parser :: reduce () {
                             std::cout << "PARSER_REDUCE_(_EXPR_CONDITION_EXPR_)\n";
                             condition->s_left(expr2);
                             condition->s_right(expr);
+                            delete this->stack.front();
                             this->stack.pop_front();
                             this->stack.pop_front();
                             this->stack.pop_front();
                             this->stack.pop_front();
+                            delete this->stack.front();
                             this->stack.pop_front();
                             this->stack.push_front(condition);
                             reduce = true;
@@ -148,6 +190,7 @@ void Parser :: reduce () {
                 } // condition expr )
             } // expr )
         } // )
+        
         // }
         else if ((dynamic_cast<ASTreeBlockClose *>(*stack_it))) {
             stack_it++;
@@ -170,6 +213,30 @@ void Parser :: reduce () {
                 stack_it++;
             }
         }
+        
+        // ]
+        else if ((dynamic_cast<ASTreeBracketClose *>(*stack_it))) {
+            stack_it++;
+            // expr ]
+            if ((expr = dynamic_cast<ASTreeExpr *>(*stack_it))) {
+                stack_it++;
+                // [ expr ]
+                if ((dynamic_cast<ASTreeBracketOpen *>(*stack_it))) {
+                    stack_it++;
+                    // expr [ expr ]
+                    if ((expr2 = dynamic_cast<ASTreeExpr *>(*stack_it))) {
+                        delete this->stack.front();
+                        this->stack.pop_front();
+                        this->stack.pop_front();
+                        delete this->stack.front();
+                        this->stack.pop_front();
+                        expr2->s_expr(expr);
+                        reduce = true;
+                    } // expr [ expr ]
+                } // [ expr ]
+            } // expr ]
+        } // ]
+        
         // statement
         else if ((statement = dynamic_cast<ASTreeStatement *>(*stack_it))) {
             std::cout << "PARSE_REDUCE_STATEMENT\n";
@@ -196,6 +263,7 @@ void Parser :: reduce () {
                 // while condition statement
                 if ((treeWhile = dynamic_cast<ASTreeWhile *>(*stack_it))) {
                     std::cout << "PARSE_REDUCE_WHILE_CONDITION_STATEMENT\n";
+                    condition->debug(0);
                     treeWhile->s_condition(condition);
                     treeWhile->s_statement(statement);
                     this->stack.pop_front();
@@ -208,33 +276,35 @@ void Parser :: reduce () {
                 } // while condition statement
             } // condition statement
         } // statement
+        
         // symbol
         else if ((symbol = dynamic_cast<ASTreeSymbol *>(*stack_it))) {
-            if (size == 1) {
-                var = new ASTreeExprVar();
-                var->s_symbol(symbol);
-                this->stack.pop_front();
-                this->stack.push_front(var);
-            }
-            else {
+            std::cout << "PARSE_REDUCE_SYMBOL\n";
+            var = new ASTreeExprVar();
+            var->s_symbol(symbol);
+            this->stack.pop_front();
+            this->stack.push_front(var);
+            reduce = true;
+        }
+        
+        // var
+        if ((var = dynamic_cast<ASTreeExprVar *>(*stack_it))) {
+            if (size >= 2) {
                 stack_it++;
-                // decl symbol
+                // decl var
                 if ((decl = dynamic_cast<ASTreeDecl *>(*stack_it))) {
+                    std::cout << "PARSE_REDUCE_DECL_VAR\n";
                     var = new ASTreeExprVar();
                     var->s_symbol(symbol);
                     var->s_decl(decl);
                     this->stack.pop_front();
                     this->stack.pop_front();
                     this->stack.push_front(var);
-                } // symbol
-                else {
-                    var = new ASTreeExprVar();
-                    var->s_symbol(symbol);
-                    this->stack.pop_front();
-                    this->stack.push_front(var);
-                } // symbol
-            } // symbol
-        }
+                    reduce = true;
+                }
+            }
+        } // var
+        
         // terminator
         else if ((dynamic_cast<ASTreeTerminator *>(*stack_it))) {
             std::cout << "PARSER_REDUCE_TERMINATOR\n";
@@ -278,6 +348,10 @@ void Parser :: parse () {
                 std::cout << "PARSER_TOKEN_NUMBER\n";
                 this->stack.push_front(new ASTreeExprConstant(atoi(token.g_text().c_str())));
                 break;
+            case TOKEN_STRING :
+                std::cout << "PARSER_STRING\n";
+                this->stack.push_front(new ASTreeExprString(token.g_text()));
+                break;
             case TOKEN_EQUAL :
                 if (this->g_next_token().g_type() == TOKEN_EQUAL) {
                     std::cout << "PARSER_TOKEN_EQUAL\n";
@@ -294,6 +368,10 @@ void Parser :: parse () {
                 std::cout << "PARSER_TOKEN_LESS_THAN\n";
                 this->stack.push_front(new ASTreeCondition(AST_LESS_THAN));
                 break;
+            case TOKEN_GREATER_THAN :
+                std::cout << "PARSER_TOKEN_LESS_THAN\n";
+                this->stack.push_front(new ASTreeCondition(AST_GREATER_THAN));
+                break;
             case TOKEN_PLUS :
                 std::cout << "PARSER_TOKEN_PLUS\n";
                 this->stack.push_front(new ASTreeExprArithmetic(AST_ADD));
@@ -301,6 +379,14 @@ void Parser :: parse () {
             case TOKEN_MINUS :
                 std::cout << "PARSER_TOKEN_MINUS\n";
                 this->stack.push_front(new ASTreeExprArithmetic(AST_SUBTRACT));
+                break;
+            case TOKEN_STAR :
+                std::cout << "PARSER_TOKEN_STAR\n";
+                this->stack.push_front(new ASTreeStar());
+                break;
+            case TOKEN_AMPERSAND :
+                std::cout << "PARSER_TOKEN_AMPERSAND\n";
+                this->stack.push_front(new ASTreeAmpersand());
                 break;
             case TOKEN_IF :
                 std::cout << "PARSER_IF\n";
@@ -325,6 +411,14 @@ void Parser :: parse () {
             case TOKEN_BLOCK_CLOSE :
                 std::cout << "PARSER_BLOCK_CLOSE\n";
                 this->stack.push_front(new ASTreeBlockClose());
+                break;
+            case TOKEN_BRACKET_OPEN :
+                std::cout << "PARSER_BRACKET_OPEN\n";
+                this->stack.push_front(new ASTreeBracketOpen());
+                break;
+            case TOKEN_BRACKET_CLOSE :
+                std::cout << "PARSER_BRACKET_CLOSE\n";
+                this->stack.push_front(new ASTreeBracketClose());
                 break;
             case TOKEN_TERMINATOR :
                 std::cout << "PARSER_TERMINATOR\n";

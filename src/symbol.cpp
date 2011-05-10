@@ -26,8 +26,8 @@ void Symbol :: s_name     (std::string name) { this->name     = name;     }
 void Symbol :: s_offset   (int       offset) { this->offset   = offset;   }
 
 void Symbol :: s_register_ptr (Register * reg) { 
-	this->reg = reg;
-	this->reg->s_symbol(this);
+	//this->reg = reg;
+	//this->reg->s_symbol(this);
 }
 
 
